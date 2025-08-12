@@ -437,6 +437,98 @@ public class NepoBlockExecutor {
                 return new Double(Math.random() * 360);
             }
             return new Double(0);
+        } else if ("text_join".equals(blockType)) {
+            // String concatenation
+            Object aValue = getValue(block, "A");
+            Object bValue = getValue(block, "B");
+            
+            String aStr = (aValue != null) ? aValue.toString() : "";
+            String bStr = (bValue != null) ? bValue.toString() : "";
+            
+            return aStr + bStr;
+        } else if ("math_random_int".equals(blockType)) {
+            // Random integer generation
+            Object fromValue = getValue(block, "FROM");
+            Object toValue = getValue(block, "TO");
+            
+            int from = 1; // Default range
+            int to = 100;
+            
+            if (fromValue instanceof Double) {
+                from = ((Double) fromValue).intValue();
+            }
+            if (toValue instanceof Double) {
+                to = ((Double) toValue).intValue();
+            }
+            
+            if (from > to) {
+                int temp = from;
+                from = to;
+                to = temp;
+            }
+            
+            int range = to - from + 1;
+            int randomValue = from + (int)(Math.random() * range);
+            return new Double(randomValue);
+        } else if ("robActions_display_clear".equals(blockType)) {
+            // Clear LCD display
+            LCD.clear();
+            LCD.refresh();
+            return null;
+        } else if ("robControls_waitUntil".equals(blockType)) {
+            // Wait until condition becomes true
+            Object condition = getValue(block, "CONDITION");
+            int maxWaitTime = 30000; // 30 second safety limit
+            long startTime = System.currentTimeMillis();
+            
+            while (System.currentTimeMillis() - startTime < maxWaitTime) {
+                condition = getValue(block, "CONDITION");
+                if (condition instanceof Boolean && ((Boolean) condition).booleanValue()) {
+                    break;
+                }
+                try {
+                    Thread.sleep(50); // Check every 50ms
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+            return null;
+        } else if ("robActions_motor_setSpeed".equals(blockType)) {
+            // Set motor speed without starting
+            String motorPort = getFieldValue(block, "MOTORPORT");
+            Object speedValue = getValue(block, "SPEED");
+            
+            if (motorPort != null && speedValue instanceof Double) {
+                NXTRegulatedMotor motor = getMotor(motorPort);
+                if (motor != null) {
+                    int speed = ((Double) speedValue).intValue();
+                    speed = Math.max(0, Math.min(900, speed)); // Clamp to valid range
+                    motor.setSpeed(speed);
+                }
+            }
+            return null;
+        } else if ("robSensors_encoder_rotation".equals(blockType)) {
+            // Get motor encoder rotation value
+            String motorPort = getFieldValue(block, "MOTORPORT");
+            if (motorPort != null) {
+                NXTRegulatedMotor motor = getMotor(motorPort);
+                if (motor != null) {
+                    int rotation = motor.getTachoCount();
+                    return new Double(rotation);
+                }
+            }
+            return new Double(0);
+        } else if ("robActions_led_on".equals(blockType)) {
+            // Turn on LED (NXT has status LED)
+            String color = getFieldValue(block, "COLOR");
+            // NXT only has orange LED, but we'll simulate different colors
+            // In real implementation, this would control the status LED
+            // For now, we'll just track the state
+            return null;
+        } else if ("robActions_led_off".equals(blockType)) {
+            // Turn off LED
+            // In real implementation, this would turn off the status LED
+            return null;
         } else if ("logic_compare".equals(blockType)) {
             String operation = getFieldValue(block, "OP");
             Object aValue = getValue(block, "A");
