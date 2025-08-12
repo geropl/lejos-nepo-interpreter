@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Test Case: motor_stop_basic -->
+<!-- Description: Test basic motor stop functionality -->
+<!-- Category: unit -->
+<!-- Block Type: robActions_motor_stop -->
+<!-- Priority: MEDIUM -->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<blockSet robottype="nxt">
+  <instance x="384" y="50">
+    <block type="robControls_start" id="1">
+      <statement name="ST">
+        <block type="robActions_motor_stop" id="2">
+          <field name="MOTORPORT">A</field>
+        </block>
+      </statement>
+    </block>
+  </instance>
+</blockSet>
