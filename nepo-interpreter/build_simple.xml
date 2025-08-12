@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="NepoInterpreterSimple" default="compile" basedir=".">
+    
+    <description>
+        Simple build script for NEPO Interpreter
+        Uses basic javac and jar commands
+    </description>
+    
+    <!-- Properties -->
+    <property name="src.dir" value="src"/>
+    <property name="build.dir" value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    
+    <!-- Initialize -->
+    <target name="init">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${classes.dir}"/>
+    </target>
+    
+    <!-- Clean -->
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+    
+    <!-- Compile (assuming leJOS is in PATH) -->
+    <target name="compile" depends="init">
+        <exec executable="nxjc" dir="${src.dir}">
+            <arg value="-d"/>
+            <arg value="../${classes.dir}"/>
+            <arg value="*.java"/>
+        </exec>
+    </target>
+    
+    <!-- Create JAR -->
+    <target name="jar" depends="compile">
+        <exec executable="nxjjar" dir="${classes.dir}">
+            <arg value="-o"/>
+            <arg value="../NepoInterpreter.jar"/>
+            <arg value="NepoInterpreterMain"/>
+            <arg value="*.class"/>
+        </exec>
+    </target>
+    
+    <!-- Upload to NXT -->
+    <target name="upload" depends="jar">
+        <exec executable="nxjupload">
+            <arg value="${build.dir}/NepoInterpreter.jar"/>
+        </exec>
+    </target>
+    
+    <!-- Upload XML file -->
+    <target name="upload-xml">
+        <exec executable="nxjupload">
+            <arg value="test_program.xml"/>
+        </exec>
+    </target>
+    
+    <!-- Complete deployment -->
+    <target name="deploy" depends="upload,upload-xml">
+        <echo message="NEPO Interpreter deployed successfully!"/>
+    </target>
+    
+</project>

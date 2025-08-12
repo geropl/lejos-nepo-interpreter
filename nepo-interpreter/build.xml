@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="NepoInterpreter" default="compile" basedir=".">
+    
+    <description>
+        NEPO XML Interpreter for leJOS NXT
+        Compiles and uploads NEPO interpreter to NXT brick
+    </description>
+    
+    <!-- Properties -->
+    <property name="src.dir" value="src"/>
+    <property name="build.dir" value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="jar.file" value="${build.dir}/NepoInterpreter.jar"/>
+    
+    <!-- leJOS NXT paths - adjust these to your leJOS installation -->
+    <property name="lejos.home" value="/opt/lejos_nxj"/>
+    <property name="lejos.pc.jar" value="${lejos.home}/lib/pc/pccomm.jar"/>
+    <property name="lejos.nxt.jar" value="${lejos.home}/lib/nxt/classes.jar"/>
+    
+    <!-- Classpath for compilation -->
+    <path id="compile.classpath">
+        <pathelement location="${lejos.nxt.jar}"/>
+    </path>
+    
+    <!-- Classpath for PC tools -->
+    <path id="pc.classpath">
+        <pathelement location="${lejos.pc.jar}"/>
+        <pathelement location="${lejos.nxt.jar}"/>
+    </path>
+    
+    <!-- Initialize build directory -->
+    <target name="init">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${classes.dir}"/>
+    </target>
+    
+    <!-- Clean build directory -->
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+    
+    <!-- Compile Java sources -->
+    <target name="compile" depends="init">
+        <javac srcdir="${src.dir}" 
+               destdir="${classes.dir}"
+               classpathref="compile.classpath"
+               debug="true"
+               source="1.4"
+               target="1.4">
+            <compilerarg value="-bootclasspath"/>
+            <compilerarg value="${lejos.nxt.jar}"/>
+        </javac>
+    </target>
+    
+    <!-- Create JAR file -->
+    <target name="jar" depends="compile">
+        <jar destfile="${jar.file}" basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="NepoInterpreter"/>
+            </manifest>
+        </jar>
+    </target>
+    
+    <!-- Link and upload to NXT -->
+    <target name="upload" depends="jar">
+        <java classname="lejos.pc.tools.NXJUpload" fork="true">
+            <classpath refid="pc.classpath"/>
+            <arg value="${jar.file}"/>
+        </java>
+    </target>
+    
+    <!-- Upload program XML file -->
+    <target name="upload-xml">
+        <java classname="lejos.pc.tools.NXJUpload" fork="true">
+            <classpath refid="pc.classpath"/>
+            <arg value="program.xml"/>
+        </java>
+    </target>
+    
+    <!-- Complete build and upload -->
+    <target name="deploy" depends="upload,upload-xml">
+        <echo message="NEPO Interpreter deployed to NXT"/>
+    </target>
+    
+</project>

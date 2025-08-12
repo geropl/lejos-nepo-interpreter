@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<blockSet robottype="nxt" xmlversion="" description="Test program for NEPO interpreter" tags="">
+  <instance x="384" y="50">
+    <block type="robControls_start" id="1" deletable="false" movable="false">
+      <mutation declare="false"></mutation>
+      <field name="DEBUG">FALSE</field>
+      <statement name="ST">
+        <block type="robActions_display_text" id="2">
+          <field name="OUT">TEXT</field>
+          <value name="OUT">
+            <block type="text" id="3">
+              <field name="TEXT">NEPO Interpreter</field>
+            </block>
+          </value>
+          <next>
+            <block type="robControls_wait_time" id="4">
+              <value name="WAIT">
+                <block type="math_number" id="5">
+                  <field name="NUM">2000</field>
+                </block>
+              </value>
+              <next>
+                <block type="robActions_display_text" id="6">
+                  <value name="OUT">
+                    <block type="text" id="7">
+                      <field name="TEXT">Moving motor...</field>
+                    </block>
+                  </value>
+                  <next>
+                    <block type="robActions_motor_on" id="8">
+                      <field name="MOTORPORT">B</field>
+                      <field name="MOTORROTATION">ROTATIONS</field>
+                      <value name="POWER">
+                        <block type="math_number" id="9">
+                          <field name="NUM">50</field>
+                        </block>
+                      </value>
+                      <value name="VALUE">
+                        <block type="math_number" id="10">
+                          <field name="NUM">2</field>
+                        </block>
+                      </value>
+                      <next>
+                        <block type="robActions_play_tone" id="11">
+                          <value name="FREQUENCY">
+                            <block type="math_number" id="12">
+                              <field name="NUM">440</field>
+                            </block>
+                          </value>
+                          <value name="DURATION">
+                            <block type="math_number" id="13">
+                              <field name="NUM">500</field>
+                            </block>
+                          </value>
+                          <next>
+                            <block type="robActions_display_text" id="14">
+                              <value name="OUT">
+                                <block type="text" id="15">
+                                  <field name="TEXT">Press touch sensor</field>
+                                </block>
+                              </value>
+                              <next>
+                                <block type="robControls_if" id="16">
+                                  <value name="IF0">
+                                    <block type="robSensors_touch_isPressed" id="17">
+                                      <field name="SENSORPORT">1</field>
+                                    </block>
+                                  </value>
+                                  <statement name="DO0">
+                                    <block type="robActions_display_text" id="18">
+                                      <value name="OUT">
+                                        <block type="text" id="19">
+                                          <field name="TEXT">Touch detected!</field>
+                                        </block>
+                                      </value>
+                                      <next>
+                                        <block type="robActions_play_tone" id="20">
+                                          <value name="FREQUENCY">
+                                            <block type="math_number" id="21">
+                                              <field name="NUM">880</field>
+                                            </block>
+                                          </value>
+                                          <value name="DURATION">
+                                            <block type="math_number" id="22">
+                                              <field name="NUM">300</field>
+                                            </block>
+                                          </value>
+                                        </block>
+                                      </next>
+                                    </block>
+                                  </statement>
+                                  <next>
+                                    <block type="robControls_repeat_times" id="23">
+                                      <value name="TIMES">
+                                        <block type="math_number" id="24">
+                                          <field name="NUM">3</field>
+                                        </block>
+                                      </value>
+                                      <statement name="DO">
+                                        <block type="robActions_display_text" id="25">
+                                          <value name="OUT">
+                                            <block type="text" id="26">
+                                              <field name="TEXT">Loop iteration</field>
+                                            </block>
+                                          </value>
+                                          <next>
+                                            <block type="robActions_play_tone" id="27">
+                                              <value name="FREQUENCY">
+                                                <block type="math_number" id="28">
+                                                  <field name="NUM">220</field>
+                                                </block>
+                                              </value>
+                                              <value name="DURATION">
+                                                <block type="math_number" id="29">
+                                                  <field name="NUM">200</field>
+                                                </block>
+                                              </value>
+                                              <next>
+                                                <block type="robControls_wait_time" id="30">
+                                                  <value name="WAIT">
+                                                    <block type="math_number" id="31">
+                                                      <field name="NUM">500</field>
+                                                    </block>
+                                                  </value>
+                                                </block>
+                                              </next>
+                                            </block>
+                                          </next>
+                                        </block>
+                                      </statement>
+                                      <next>
+                                        <block type="robActions_display_text" id="32">
+                                          <value name="OUT">
+                                            <block type="text" id="33">
+                                              <field name="TEXT">Program complete!</field>
+                                            </block>
+                                          </value>
+                                        </block>
+                                      </next>
+                                    </block>
+                                  </next>
+                                </block>
+                              </next>
+                            </block>
+                          </next>
+                        </block>
+                      </next>
+                    </block>
+                  </next>
+                </block>
+              </next>
+            </block>
+          </next>
+        </block>
+      </statement>
+    </block>
+  </instance>
+</blockSet>
