@@ -368,6 +368,75 @@ public class NepoBlockExecutor {
                 }
             }
             return new Double(0);
+        } else if ("robSensors_gyro_angle".equals(blockType)) {
+            // Gyro sensor angle reading
+            String sensorPort = getFieldValue(block, "SENSORPORT");
+            if (sensorPort != null) {
+                // Mock gyro angle reading (0-360 degrees)
+                // In real implementation, would read from actual gyro sensor
+                return new Double(Math.random() * 360);
+            }
+            return new Double(0);
+        } else if ("robSensors_gyro_rate".equals(blockType)) {
+            // Gyro sensor rate reading (degrees per second)
+            String sensorPort = getFieldValue(block, "SENSORPORT");
+            if (sensorPort != null) {
+                // Mock gyro rate reading (-1000 to 1000 degrees/sec)
+                return new Double((Math.random() - 0.5) * 2000);
+            }
+            return new Double(0);
+        } else if ("robActions_motor_stop".equals(blockType)) {
+            // Stop motor immediately
+            String motorPort = getFieldValue(block, "MOTORPORT");
+            if (motorPort != null) {
+                NXTRegulatedMotor motor = getMotor(motorPort);
+                if (motor != null) {
+                    motor.stop(true); // Immediate stop with brake
+                }
+            }
+            return null;
+        } else if ("robActions_motor_float".equals(blockType)) {
+            // Float motor (coast to stop)
+            String motorPort = getFieldValue(block, "MOTORPORT");
+            if (motorPort != null) {
+                NXTRegulatedMotor motor = getMotor(motorPort);
+                if (motor != null) {
+                    motor.flt(true); // Float/coast
+                }
+            }
+            return null;
+        } else if ("robSensors_color_ambientlight".equals(blockType)) {
+            // Color sensor ambient light reading
+            String sensorPort = getFieldValue(block, "SENSORPORT");
+            if (sensorPort != null) {
+                // Mock ambient light reading (0-100)
+                return new Double(Math.random() * 100);
+            }
+            return new Double(0);
+        } else if ("robSensors_color_light".equals(blockType)) {
+            // Color sensor reflected light reading
+            String sensorPort = getFieldValue(block, "SENSORPORT");
+            if (sensorPort != null) {
+                // Mock reflected light reading (0-100)
+                return new Double(Math.random() * 100);
+            }
+            return new Double(0);
+        } else if ("robSensors_sound_loudness".equals(blockType)) {
+            // Sound sensor loudness reading
+            String sensorPort = getFieldValue(block, "SENSORPORT");
+            if (sensorPort != null) {
+                // Mock sound level reading (0-100)
+                return new Double(Math.random() * 100);
+            }
+            return new Double(0);
+        } else if ("robSensors_compass_angle".equals(blockType)) {
+            // Compass sensor angle reading
+            String sensorPort = getFieldValue(block, "SENSORPORT");
+            if (sensorPort != null) {
+                // Mock compass angle reading (0-360 degrees)
+                return new Double(Math.random() * 360);
+            }
+            return new Double(0);
         } else if ("logic_compare".equals(blockType)) {
             String operation = getFieldValue(block, "OP");
             Object aValue = getValue(block, "A");
