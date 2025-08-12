@@ -36,6 +36,8 @@ public class NepoBlockExecutor {
                 executeWaitTimeBlock(block);
             } else if ("robControls_if".equals(blockType)) {
                 executeIfBlock(block);
+            } else if ("robControls_ifElse".equals(blockType)) {
+                executeIfElseBlock(block);
             } else if ("robControls_repeat_times".equals(blockType)) {
                 executeRepeatTimesBlock(block);
             } else if ("robSensors_touch_isPressed".equals(blockType)) {
@@ -163,6 +165,26 @@ public class NepoBlockExecutor {
     }
     
     /**
+     * Execute if-else block
+     */
+    private void executeIfElseBlock(SimpleXMLParser.XMLElement block) {
+        Object conditionValue = getValue(block, "IF0");
+        if (conditionValue instanceof Boolean && ((Boolean) conditionValue).booleanValue()) {
+            // Execute IF branch
+            SimpleXMLParser.XMLElement doBlock = getStatementBlock(block, "DO0");
+            if (doBlock != null) {
+                executeBlock(doBlock);
+            }
+        } else {
+            // Execute ELSE branch
+            SimpleXMLParser.XMLElement elseBlock = getStatementBlock(block, "ELSE");
+            if (elseBlock != null) {
+                executeBlock(elseBlock);
+            }
+        }
+    }
+
+    /**
      * Execute repeat times block
      */
     private void executeRepeatTimesBlock(SimpleXMLParser.XMLElement block) {
@@ -244,6 +266,108 @@ public class NepoBlockExecutor {
                 UltrasonicSensor sensor = new UltrasonicSensor(getSensorPort(sensorPort));
                 return new Double(sensor.getDistance());
             }
+        } else if ("robActions_motor_getPower".equals(blockType)) {
+            String motorPort = getFieldValue(block, "MOTORPORT");
+            if (motorPort != null) {
+                NXTRegulatedMotor motor = getMotor(motorPort);
+                if (motor != null) {
+                    // Return current motor speed as power percentage (approximate)
+                    int speed = motor.getSpeed();
+                    int power = speed / 7; // Rough conversion from degrees/sec to percentage
+                    return new Double(power);
+                }
+            }
+        } else if ("robSensors_timer_get".equals(blockType)) {
+            // Return elapsed time since program start in milliseconds
+            // For simplicity, we'll use system time
+            return new Double(System.currentTimeMillis() % 1000000); // Keep it reasonable
+        } else if ("robControls_while".equals(blockType)) {
+            // While loop implementation
+            Object condition = getValue(block, "BOOL");
+            if (condition instanceof Boolean) {
+                while (((Boolean) condition).booleanValue()) {
+                    // Execute statements in the loop
+                    Object statements = getValue(block, "DO");
+                    if (statements != null) {
+                        executeBlock(statements);
+                    }
+                    // Re-evaluate condition
+                    condition = getValue(block, "BOOL");
+                    if (!(condition instanceof Boolean)) break;
+                }
+            }
+            return null;
+        } else if ("robControls_repeat_forever".equals(blockType)) {
+            // Infinite loop implementation (with safety limit)
+            int maxIterations = 10000; // Safety limit
+            int iterations = 0;
+            while (iterations < maxIterations) {
+                Object statements = getValue(block, "DO");
+                if (statements != null) {
+                    executeBlock(statements);
+                }
+                iterations++;
+            }
+            return null;
+        } else if ("variables_get".equals(blockType)) {
+            // Get variable value
+            String varName = getFieldValue(block, "VAR");
+            if (varName != null && variables.containsKey(varName)) {
+                return variables.get(varName);
+            }
+            return new Double(0); // Default value
+        } else if ("variables_set".equals(blockType)) {
+            // Set variable value
+            String varName = getFieldValue(block, "VAR");
+            Object value = getValue(block, "VALUE");
+            if (varName != null && value != null) {
+                variables.put(varName, value);
+            }
+            return null;
+        } else if ("math_arithmetic".equals(blockType)) {
+            // Arithmetic operations
+            String operation = getFieldValue(block, "OP");
+            Object aValue = getValue(block, "A");
+            Object bValue = getValue(block, "B");
+            
+            if (aValue instanceof Double && bValue instanceof Double && operation != null) {
+                double a = ((Double) aValue).doubleValue();
+                double b = ((Double) bValue).doubleValue();
+                
+                switch (operation) {
+                    case "ADD": return new Double(a + b);
+                    case "MINUS": return new Double(a - b);
+                    case "MULTIPLY": return new Double(a * b);
+                    case "DIVIDE": return b != 0 ? new Double(a / b) : new Double(0);
+                    case "POWER": return new Double(Math.pow(a, b));
+                }
+            }
+            return new Double(0);
+        } else if ("math_single".equals(blockType)) {
+            // Single value math operations
+            String operation = getFieldValue(block, "OP");
+            Object numValue = getValue(block, "NUM");
+            
+            if (numValue instanceof Double && operation != null) {
+                double num = ((Double) numValue).doubleValue();
+                
+                switch (operation) {
+                    case "ROOT": return new Double(Math.sqrt(num));
+                    case "ABS": return new Double(Math.abs(num));
+                    case "NEG": return new Double(-num);
+                    case "LN": return new Double(Math.log(num));
+                    case "LOG10": return new Double(Math.log10(num));
+                    case "EXP": return new Double(Math.exp(num));
+                    case "POW10": return new Double(Math.pow(10, num));
+                    case "SIN": return new Double(Math.sin(Math.toRadians(num)));
+                    case "COS": return new Double(Math.cos(Math.toRadians(num)));
+                    case "TAN": return new Double(Math.tan(Math.toRadians(num)));
+                    case "ASIN": return new Double(Math.toDegrees(Math.asin(num)));
+                    case "ACOS": return new Double(Math.toDegrees(Math.acos(num)));
+                    case "ATAN": return new Double(Math.toDegrees(Math.atan(num)));
+                }
+            }
+            return new Double(0);
         } else if ("logic_compare".equals(blockType)) {
             String operation = getFieldValue(block, "OP");
             Object aValue = getValue(block, "A");
@@ -254,8 +378,29 @@ public class NepoBlockExecutor {
                 double b = ((Double) bValue).doubleValue();
                 return new Boolean(executeComparison(operation, a, b));
             }
+        } else if ("logic_operation".equals(blockType)) {
+            String operation = getFieldValue(block, "OP");
+            if (operation != null) {
+                if ("NOT".equals(operation)) {
+                    // Unary NOT operation
+                    Object aValue = getValue(block, "A");
+                    if (aValue instanceof Boolean) {
+                        return new Boolean(!((Boolean) aValue).booleanValue());
+                    }
+                } else {
+                    // Binary operations (AND, OR)
+                    Object aValue = getValue(block, "A");
+                    Object bValue = getValue(block, "B");
+                    
+                    if (aValue instanceof Boolean && bValue instanceof Boolean) {
+                        boolean a = ((Boolean) aValue).booleanValue();
+                        boolean b = ((Boolean) bValue).booleanValue();
+                        return new Boolean(executeLogicalOperation(operation, a, b));
+                    }
+                }
+            }
         }
-        
+
         return null;
     }
     
