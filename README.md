@@ -37,6 +37,13 @@ nepo-interpreter/
 ├── sample_nepo.xml             # Example NEPO program
 ├── program.xml                 # Your NEPO program goes here
 ├── NepoBlockTypes.md           # Documentation of supported blocks
+├── project-management/         # Project tracking and planning documents
+│   ├── DEVELOPMENT_PLAN.md     # Master project plan and status
+│   ├── BLOCK_TRACKER.json      # Detailed block implementation tracking
+│   ├── MILESTONES.md           # Time-based milestone tracking
+│   ├── BLOCK_IMPLEMENTATION_CHECKLIST.md  # Implementation guidelines
+│   ├── TESTING_FRAMEWORK_SPEC.md          # Test framework specification
+│   └── PROJECT_TRACKING_GUIDE.md          # How to use tracking system
 └── README.md                   # This file
 ```
 
@@ -218,12 +225,24 @@ LCD.refresh();
 
 This is a proof-of-concept implementation. Contributions are welcome!
 
+### Development Process
+For detailed development information, see the project management documentation:
+- **[Development Plan](project-management/DEVELOPMENT_PLAN.md)** - Overall project status and roadmap
+- **[Implementation Guide](project-management/BLOCK_IMPLEMENTATION_CHECKLIST.md)** - Step-by-step implementation process
+- **[Project Tracking](project-management/PROJECT_TRACKING_GUIDE.md)** - How to use the tracking system
+
+### Current Development Status
+- **Phase 1 Complete:** 13/13 core blocks implemented ✅
+- **Phase 2 Planned:** Basic interactivity (5 blocks) 📋
+- **Phase 3 Planned:** Advanced control flow (6 blocks) 📋
+- **Total Target:** 35+ NEPO block types
+
 Priority areas for improvement:
-1. More NEPO block implementations
-2. Better error handling and debugging
-3. Sensor support
-4. Control flow structures (loops, conditionals)
-5. Variable and expression handling
+1. Test harness implementation (critical path)
+2. Phase 2 sensor and logic blocks
+3. Variable management system
+4. Advanced control flow structures
+5. Enhanced hardware support
 
 ## License
 
