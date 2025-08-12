@@ -43,6 +43,8 @@ public class MockNepoBlockExecutor {
                 executeWaitTimeBlock(block);
             } else if ("robControls_if".equals(blockType)) {
                 executeIfBlock(block);
+            } else if ("robControls_ifElse".equals(blockType)) {
+                executeIfElseBlock(block);
             } else if ("robControls_repeat_times".equals(blockType)) {
                 executeRepeatTimesBlock(block);
             } else if ("robActions_play_tone".equals(blockType)) {
@@ -156,6 +158,26 @@ public class MockNepoBlockExecutor {
     }
     
     /**
+     * Execute if-else block
+     */
+    private void executeIfElseBlock(SimpleXMLParser.XMLElement block) {
+        Object conditionValue = getValue(block, "IF0");
+        if (conditionValue instanceof Boolean && ((Boolean) conditionValue).booleanValue()) {
+            // Execute IF branch
+            SimpleXMLParser.XMLElement doBlock = getStatementBlock(block, "DO0");
+            if (doBlock != null) {
+                executeBlock(doBlock);
+            }
+        } else {
+            // Execute ELSE branch
+            SimpleXMLParser.XMLElement elseBlock = getStatementBlock(block, "ELSE");
+            if (elseBlock != null) {
+                executeBlock(elseBlock);
+            }
+        }
+    }
+
+    /**
      * Execute repeat times block
      */
     private void executeRepeatTimesBlock(SimpleXMLParser.XMLElement block) {
@@ -241,6 +263,19 @@ public class MockNepoBlockExecutor {
                     return new Double(sensor.getDistance());
                 }
             }
+        } else if ("robActions_motor_getPower".equals(blockType)) {
+            String motorPort = getFieldValue(block, "MOTORPORT");
+            if (motorPort != null) {
+                MockMotor motor = mockHardware.getMotor(motorPort);
+                if (motor != null) {
+                    MockMotor.MotorState state = motor.getState();
+                    return new Double(state.getPowerSetting());
+                }
+            }
+        } else if ("robSensors_timer_get".equals(blockType)) {
+            // Return timer value from mock hardware
+            MockTimer timer = mockHardware.getTimer();
+            return new Double(timer.getValue());
         } else if ("logic_compare".equals(blockType)) {
             String operation = getFieldValue(block, "OP");
             Object aValue = getValue(block, "A");
@@ -251,8 +286,29 @@ public class MockNepoBlockExecutor {
                 double b = ((Double) bValue).doubleValue();
                 return new Boolean(executeComparison(operation, a, b));
             }
+        } else if ("logic_operation".equals(blockType)) {
+            String operation = getFieldValue(block, "OP");
+            if (operation != null) {
+                if ("NOT".equals(operation)) {
+                    // Unary NOT operation
+                    Object aValue = getValue(block, "A");
+                    if (aValue instanceof Boolean) {
+                        return new Boolean(!((Boolean) aValue).booleanValue());
+                    }
+                } else {
+                    // Binary operations (AND, OR)
+                    Object aValue = getValue(block, "A");
+                    Object bValue = getValue(block, "B");
+                    
+                    if (aValue instanceof Boolean && bValue instanceof Boolean) {
+                        boolean a = ((Boolean) aValue).booleanValue();
+                        boolean b = ((Boolean) bValue).booleanValue();
+                        return new Boolean(executeLogicalOperation(operation, a, b));
+                    }
+                }
+            }
         }
-        
+
         return null;
     }
     
@@ -308,6 +364,15 @@ public class MockNepoBlockExecutor {
         return false;
     }
     
+    /**
+     * Execute logical operation
+     */
+    private boolean executeLogicalOperation(String operation, boolean a, boolean b) {
+        if ("AND".equals(operation)) return a && b;
+        if ("OR".equals(operation)) return a || b;
+        return false;
+    }
+
     /**
      * Stop execution
      */
