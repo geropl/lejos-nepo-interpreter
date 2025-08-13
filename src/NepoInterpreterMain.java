@@ -2,29 +2,52 @@ import lejos.nxt.*;
 import lejos.util.Delay;
 
 /**
- * Main class for NEPO XML Interpreter
+ * Main class for NEPO XML Interpreter with Dynamic File Selection
  * 
  * This version includes XML parsing capabilities and can execute
- * real NEPO XML programs created in Open Roberta Lab.
+ * real NEPO XML programs created in Open Roberta Lab with dynamic file picking.
  */
 public class NepoInterpreterMain {
     
     public static void main(String[] args) {
+        LCD.clear();
         LCD.drawString("NEPO Interpreter", 0, 0);
-        LCD.drawString("v1.0", 0, 1);
+        LCD.drawString("v2.0 Dynamic", 0, 1);
         LCD.refresh();
+        Delay.msDelay(1500);
         
         try {
-            // Determine which program to run
-            String xmlFile = "test_program.xml";
+            String xmlFile = null;
+            
+            // Check if filename provided as argument
             if (args.length > 0) {
                 xmlFile = args[0];
+                LCD.clear();
+                LCD.drawString("Using argument:", 0, 0);
+                LCD.drawString(xmlFile, 0, 1);
+                LCD.refresh();
+                Delay.msDelay(1000);
+            } else {
+                // Show dynamic file picker
+                xmlFile = FilePicker.pickFileAdvanced(".xml", "Select NEPO Program", true);
+                
+                if (xmlFile == null) {
+                    LCD.clear();
+                    LCD.drawString("No file selected", 0, 0);
+                    LCD.drawString("Using default", 0, 1);
+                    LCD.refresh();
+                    Delay.msDelay(1000);
+                    xmlFile = "test_program.xml";
+                }
             }
             
-            LCD.drawString("Loading: " + xmlFile, 0, 2);
+            LCD.clear();
+            LCD.drawString("Loading:", 0, 0);
+            LCD.drawString(xmlFile, 0, 1);
+            LCD.drawString("Please wait...", 0, 2);
             LCD.refresh();
             Delay.msDelay(1000);
-            
+
             // Parse the XML program
             SimpleXMLParser.XMLElement root = SimpleXMLParser.parseFile(xmlFile);
             if (root == null) {
@@ -74,11 +97,21 @@ public class NepoInterpreterMain {
             Button.waitForAnyPress();
         }
         
+        // Program completion with restart option
         LCD.clear();
-        LCD.drawString("Program finished", 0, 0);
-        LCD.drawString("Press any key", 0, 6);
+        LCD.drawString("Program Complete", 0, 0);
+        LCD.drawString("", 0, 1);
+        LCD.drawString("Press ENTER to", 0, 3);
+        LCD.drawString("run another", 0, 4);
+        LCD.drawString("Press ESCAPE", 0, 5);
+        LCD.drawString("to exit", 0, 6);
         LCD.refresh();
-        Button.waitForAnyPress();
+        
+        int button = Button.waitForAnyPress();
+        if (button == Button.ID_ENTER) {
+            // Restart the program for another file selection
+            main(new String[0]);
+        }
     }
     
     /**
