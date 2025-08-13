@@ -3,3 +3,10 @@
 
 # Ignore all NXT programs
 *.nxj
+
+# Ignore build directory
+build/
+
+# Ignore test result files
+test/test-results.*
+test/phase*-test-results.*

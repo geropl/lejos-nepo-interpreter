@@ -54,9 +54,10 @@ This project includes a complete dev container with leJOS NXJ pre-installed:
 
 1. Open in GitHub Codespaces or VS Code with Dev Containers extension
 2. Container will automatically install leJOS NXJ tools
-3. Build immediately:
+3. Build and test:
    ```bash
    ./build_dynamic.sh     # Build programs
+   ./run_tests.sh         # Run all tests
    ```
 
 ### Manual Setup
@@ -110,14 +111,27 @@ See [LEJOS_SETUP.md](LEJOS_SETUP.md) for detailed setup instructions.
 # Upload to NXT
 nxjupload NepoDynamic.nxj
 nxjupload sample_programs/*.xml
-ant compile
-
-# Build JAR file
-ant jar
-
-# Upload interpreter and program to NXT
-ant deploy
 ```
+
+### 4. Run Tests
+
+```bash
+# Run all tests
+./run_tests.sh
+
+# Run with options
+./run_tests.sh --help     # Show all options
+./run_tests.sh -v         # Verbose output
+./run_tests.sh -c unit    # Run unit tests only
+```
+
+The test suite includes:
+- **Unit Tests** - Individual block functionality
+- **Integration Tests** - Block combinations and workflows  
+- **Mock Hardware Tests** - Simulated NXT hardware interactions
+- **XML Parser Tests** - NEPO XML parsing validation
+
+Test reports are generated in `test/` directory as HTML, JSON, and text formats.
 
 ### 5. Run on NXT
 
