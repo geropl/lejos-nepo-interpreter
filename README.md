@@ -47,41 +47,73 @@ nepo-interpreter/
 └── README.md                   # This file
 ```
 
+## Quick Start
+
+### Dev Container (Recommended)
+This project includes a complete dev container with leJOS NXJ pre-installed:
+
+1. Open in GitHub Codespaces or VS Code with Dev Containers extension
+2. Container will automatically install leJOS NXJ tools
+3. Build and test immediately:
+   ```bash
+   ./test_environment.sh  # Verify installation
+   ./build_dynamic.sh     # Build programs
+   ```
+
+### Manual Setup
+See [LEJOS_SETUP.md](LEJOS_SETUP.md) for detailed installation instructions.
+
 ## Prerequisites
 
-1. **leJOS NXT** installed and configured
-2. **Java Development Kit** (JDK 1.4 or compatible)
-3. **Apache Ant** for building
-4. **Open Roberta Lab** for creating programs
+1. **leJOS NXJ 0.9.1beta-3** - Java platform for LEGO NXT
+2. **Java 8 JDK** - Required for leJOS NXJ compatibility  
+3. **Open Roberta Lab** - For creating visual programs
+4. **USB connection** - For uploading to NXT (optional for development)
+
+## New Features
+
+### Dynamic File Selection
+The interpreter now includes dynamic file selection capabilities:
+
+- **Interactive File Browser** - Select XML programs directly on NXT
+- **Two Picker Modes** - Simple menu or advanced navigation
+- **File Information** - Display file sizes and details
+- **Multiple Programs** - Run different programs without recompiling
+- **Sample Programs** - Included XML examples for testing
+
+See [DYNAMIC_FILE_SELECTION.md](DYNAMIC_FILE_SELECTION.md) for complete documentation.
 
 ## Setup Instructions
 
-### 1. Install leJOS NXT
+### 1. Development Environment
 
-Download and install leJOS NXT from: https://lejos.sourceforge.io/nxj.php
+The project includes a complete dev container setup:
+- Automatic leJOS NXJ installation
+- Pre-configured Java 8 environment
+- Build tools and scripts ready to use
 
-Make sure your NXT brick has leJOS firmware installed.
+See [LEJOS_SETUP.md](LEJOS_SETUP.md) for detailed setup instructions.
 
-### 2. Configure Build Environment
-
-Edit `build.xml` and set the correct path to your leJOS installation:
-
-```xml
-<property name="lejos.home" value="/path/to/your/lejos_nxj"/>
-```
-
-### 3. Create Your NEPO Program
+### 2. Create Your NEPO Program
 
 1. Go to https://lab.open-roberta.org/
 2. Select "NXT" as your robot
 3. Create your program using the visual blocks
 4. Export your program (Menu → Export → XML)
-5. Save the XML file as `program.xml` in this directory
+5. Save the XML file in the project directory
 
-### 4. Build and Deploy
+### 3. Build and Deploy
 
 ```bash
-# Compile the interpreter
+# Test environment
+./test_environment.sh
+
+# Build all components
+./build_dynamic.sh
+
+# Upload to NXT
+nxjupload NepoDynamic.nxj
+nxjupload sample_programs/*.xml
 ant compile
 
 # Build JAR file

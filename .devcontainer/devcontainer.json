@@ -1,35 +1,67 @@
-// The Dev Container format allows you to configure your environment. At the heart of it
-// is a Docker image or Dockerfile which controls the tools available in your environment.
-//
-// See https://aka.ms/devcontainer.json for more information.
+// Dev Container configuration for NEPO NXT Interpreter with leJOS NXJ
+// This environment includes leJOS NXJ tools for NXT development
 {
-	"name": "Gitpod",
-	// This universal image (~10GB) includes many development tools and languages,
-	// providing a convenient all-in-one development environment.
-	//
-	// This image is already available on remote runners for fast startup. On desktop
-	// and linux runners, it will need to be downloaded, which may take longer.
-	//
-	// For faster startup on desktop/linux, consider a smaller, language-specific image:
-	// • For Python: mcr.microsoft.com/devcontainers/python:3.11
-	// • For Node.js: mcr.microsoft.com/devcontainers/javascript-node:18
-	// • For Go: mcr.microsoft.com/devcontainers/go:1.21
-	// • For Java: mcr.microsoft.com/devcontainers/java:17
-	//
-	// Browse more options at: https://hub.docker.com/r/microsoft/devcontainers
-	// or build your own using the Dockerfile option below.
-	"image": "mcr.microsoft.com/devcontainers/universal:3.0.3"
-	// Use "build":
-	// instead of the image to use a Dockerfile to build an image.
-	// "build": {
-    //     "context": ".",
-    //     "dockerfile": "Dockerfile"
-    // }
-	// Features add additional features to your environment. See https://containers.dev/features
-	// Beware: features are not supported on all platforms and may have unintended side-effects.
-	// "features": {
-    //   "ghcr.io/devcontainers/features/docker-in-docker": {
-    //     "moby": false
-    //   }
-    // }
+	"name": "NEPO NXT Interpreter with leJOS",
+	
+	// Use custom Dockerfile with leJOS NXJ installation
+	"build": {
+		"context": ".",
+		"dockerfile": "Dockerfile"
+	},
+	
+	// Environment variables for leJOS NXJ
+	"containerEnv": {
+		"NXJ_HOME": "/opt/lejos_nxj",
+		"JAVA_HOME": "/usr/lib/jvm/java-8-openjdk-amd64"
+	},
+	
+	// Add leJOS tools to PATH
+	"remoteEnv": {
+		"PATH": "/opt/lejos_nxj/bin:${containerEnv:PATH}"
+	},
+	
+	// VS Code extensions for Java development
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"vscjava.vscode-java-pack",
+				"redhat.java",
+				"vscjava.vscode-java-debug",
+				"vscjava.vscode-maven",
+				"ms-vscode.vscode-json"
+			],
+			"settings": {
+				"java.home": "/usr/lib/jvm/java-8-openjdk-amd64",
+				"java.configuration.runtimes": [
+					{
+						"name": "JavaSE-1.8",
+						"path": "/usr/lib/jvm/java-8-openjdk-amd64"
+					}
+				],
+				"java.compile.nullAnalysis.mode": "disabled",
+				"files.associations": {
+					"*.xml": "xml"
+				}
+			}
+		}
+	},
+	
+	// Forward ports for potential web interfaces
+	"forwardPorts": [8080, 3000],
+	
+	// Post-create command to verify installation
+	"postCreateCommand": "echo 'Verifying leJOS NXJ installation...' && nxjc -version && echo 'leJOS NXJ ready for NXT development!'",
+	
+	// Mount the workspace
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	
+	// Run as non-root user
+	"remoteUser": "codespace",
+	
+	// Features for additional development tools
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	}
 }
