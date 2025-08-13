@@ -53,19 +53,19 @@ public class ConfigurationBlockExecutor {
         }
         
         // Process child blocks
-        Vector children = block.getChildren();
+        Vector children = block.children;
         for (int i = 0; i < children.size(); i++) {
             SimpleXMLParser.XMLElement child = (SimpleXMLParser.XMLElement) children.elementAt(i);
-            if ("statement".equals(child.name) && "ST".equals(child.getAttribute("name"))) {
+            if ("statement".equals(child.tagName) && "ST".equals(child.getAttribute("name"))) {
                 // Process statement children
-                Vector statementChildren = child.getChildren();
+                Vector statementChildren = child.children;
                 for (int j = 0; j < statementChildren.size(); j++) {
                     SimpleXMLParser.XMLElement statementChild = (SimpleXMLParser.XMLElement) statementChildren.elementAt(j);
-                    if ("block".equals(statementChild.name)) {
+                    if ("block".equals(statementChild.tagName)) {
                         executeConfigBlock(statementChild, config);
                     }
                 }
-            } else if ("block".equals(child.name)) {
+            } else if ("block".equals(child.tagName)) {
                 executeConfigBlock(child, config);
             }
         }
@@ -154,7 +154,7 @@ public class ConfigurationBlockExecutor {
     /**
      * Create default configuration for NXT
      */
-    private RobotConfiguration createDefaultConfiguration() {
+    public RobotConfiguration createDefaultConfiguration() {
         RobotConfiguration config = new RobotConfiguration();
         
         // Default NXT setup

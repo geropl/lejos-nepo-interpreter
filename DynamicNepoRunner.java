@@ -50,48 +50,24 @@ public class DynamicNepoRunner {
      */
     private static String selectProgram() {
         LCD.clear();
-        LCD.drawString("Select Program:", 0, 0);
+        LCD.drawString("Select Picker:", 0, 0);
         LCD.drawString("", 0, 1);
-        LCD.drawString("1. Simple Picker", 0, 2);
-        LCD.drawString("2. Advanced Picker", 0, 3);
-        LCD.drawString("3. Exit", 0, 4);
-        LCD.drawString("", 0, 5);
-        LCD.drawString("Use UP/DOWN/ENTER", 0, 6);
+        LCD.drawString("ENTER: Simple", 0, 2);
+        LCD.drawString("LEFT:  Advanced", 0, 3);
+        LCD.drawString("ESCAPE: Exit", 0, 4);
         LCD.refresh();
         
-        int choice = 1;
-        while (true) {
-            // Highlight current choice
-            LCD.drawString(choice == 1 ? ">" : " ", 0, 2);
-            LCD.drawString(choice == 2 ? ">" : " ", 0, 3);
-            LCD.drawString(choice == 3 ? ">" : " ", 0, 4);
-            LCD.refresh();
-            
-            int button = Button.waitForAnyPress();
-            
-            switch (button) {
-                case Button.ID_UP:
-                    choice = (choice > 1) ? choice - 1 : 3;
-                    break;
-                case Button.ID_DOWN:
-                    choice = (choice < 3) ? choice + 1 : 1;
-                    break;
-                case Button.ID_ENTER:
-                    switch (choice) {
-                        case 1:
-                            return FilePicker.pickXMLFile();
-                        case 2:
-                            return AdvancedFilePicker.selectXmlFile();
-                        case 3:
-                            return null;
-                    }
-                    break;
-                case Button.ID_ESCAPE:
-                    return null;
-            }
+        int button = Button.waitForAnyPress();
+        
+        if (button == Button.ID_ENTER) {
+            return FilePicker.pickXMLFile();
+        } else if (button == Button.ID_LEFT) {
+            return AdvancedFilePicker.selectXmlFile();
+        } else {
+            return null; // Exit or any other button
         }
     }
-    
+
     /**
      * Execute the selected program
      */

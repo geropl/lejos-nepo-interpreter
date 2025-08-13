@@ -50,8 +50,8 @@
 	"forwardPorts": [8080, 3000],
 	
 	// Post-create command to verify installation
-	"postCreateCommand": "echo 'Verifying leJOS NXJ installation...' && nxjc -version && echo 'leJOS NXJ ready for NXT development!'",
-	
+	"postCreateCommand": "echo 'leJOS NXJ ready for NXT development! Run ./build_dynamic.sh to build programs.'",
+
 	// Mount the workspace
 	"workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",

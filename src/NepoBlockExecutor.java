@@ -311,7 +311,7 @@ public class NepoBlockExecutor {
             if (condition instanceof Boolean) {
                 while (((Boolean) condition).booleanValue()) {
                     // Execute statements in the loop
-                    Object statements = getValue(block, "DO");
+                    SimpleXMLParser.XMLElement statements = getStatementBlock(block, "DO");
                     if (statements != null) {
                         executeBlock(statements);
                     }
@@ -326,7 +326,7 @@ public class NepoBlockExecutor {
             int maxIterations = 10000; // Safety limit
             int iterations = 0;
             while (iterations < maxIterations) {
-                Object statements = getValue(block, "DO");
+                SimpleXMLParser.XMLElement statements = getStatementBlock(block, "DO");
                 if (statements != null) {
                     executeBlock(statements);
                 }
@@ -336,7 +336,7 @@ public class NepoBlockExecutor {
         } else if ("variables_get".equals(blockType)) {
             // Get variable value
             String varName = getFieldValue(block, "VAR");
-            if (varName != null && variables.containsKey(varName)) {
+            if (varName != null && variables.get(varName) != null) {
                 return variables.get(varName);
             }
             return new Double(0); // Default value
@@ -380,7 +380,7 @@ public class NepoBlockExecutor {
                     case "ABS": return new Double(Math.abs(num));
                     case "NEG": return new Double(-num);
                     case "LN": return new Double(Math.log(num));
-                    case "LOG10": return new Double(Math.log10(num));
+                    case "LOG10": return new Double(Math.log(num) / Math.log(10));
                     case "EXP": return new Double(Math.exp(num));
                     case "POW10": return new Double(Math.pow(10, num));
                     case "SIN": return new Double(Math.sin(Math.toRadians(num)));
@@ -587,6 +587,18 @@ public class NepoBlockExecutor {
         }
 
         return null;
+    }
+    
+    /**
+     * Execute logical operations (AND, OR, NOT)
+     */
+    private boolean executeLogicalOperation(String operation, boolean a, boolean b) {
+        if ("AND".equals(operation)) {
+            return a && b;
+        } else if ("OR".equals(operation)) {
+            return a || b;
+        }
+        return false; // Default case
     }
     
     /**

@@ -19,6 +19,12 @@ import java.io.File;
  */
 public class AdvancedFilePicker {
     
+    // Helper method for String operations not available in leJOS
+    private static boolean stringEndsWith(String str, String suffix) {
+        if (str.length() < suffix.length()) return false;
+        return str.substring(str.length() - suffix.length()).equals(suffix);
+    }
+
     // Constants
     private static final String[] SUPPORTED_EXTENSIONS = {".xml", ".txt", ".log"};
     private static final int MAX_ITEMS_PER_PAGE = 6;
@@ -224,7 +230,7 @@ public class AdvancedFilePicker {
     private static boolean isFileSupported(String filename, String[] extensions) {
         String name = filename.toLowerCase();
         for (int i = 0; i < extensions.length; i++) {
-            if (name.endsWith(extensions[i].toLowerCase())) {
+            if (stringEndsWith(name, extensions[i].toLowerCase())) {
                 return true;
             }
         }

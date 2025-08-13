@@ -12,6 +12,12 @@ import java.util.Vector;
  */
 public class FilePicker {
     
+    // Helper method for String operations not available in leJOS
+    private static boolean stringEndsWith(String str, String suffix) {
+        if (str.length() < suffix.length()) return false;
+        return str.substring(str.length() - suffix.length()).equals(suffix);
+    }
+
     /**
      * Show file picker and return selected filename
      * @param fileExtension Filter files by extension (e.g., ".xml")
@@ -40,7 +46,7 @@ public class FilePicker {
         Vector filteredFiles = new Vector();
         for (int i = 0; i < allFiles.length; i++) {
             String filename = allFiles[i].getName();
-            if (fileExtension == null || filename.toLowerCase().endsWith(fileExtension.toLowerCase())) {
+            if (fileExtension == null || stringEndsWith(filename.toLowerCase(), fileExtension.toLowerCase())) {
                 filteredFiles.addElement(filename);
             }
         }
@@ -57,8 +63,10 @@ public class FilePicker {
         
         // Convert to array for TextMenu
         String[] fileNames = new String[filteredFiles.size()];
-        filteredFiles.copyInto(fileNames);
-        
+        for (int i = 0; i < filteredFiles.size(); i++) {
+            fileNames[i] = (String) filteredFiles.elementAt(i);
+        }
+
         // Show file selection menu
         LCD.clear();
         TextMenu menu = new TextMenu(fileNames, 1, title != null ? title : "Select File");
@@ -106,7 +114,7 @@ public class FilePicker {
         
         for (int i = 0; i < allFiles.length; i++) {
             String filename = allFiles[i].getName();
-            if (fileExtension == null || filename.toLowerCase().endsWith(fileExtension.toLowerCase())) {
+            if (fileExtension == null || stringEndsWith(filename.toLowerCase(), fileExtension.toLowerCase())) {
                 filteredFiles.addElement(filename);
                 fileSizes.addElement(new Long(allFiles[i].length()));
             }

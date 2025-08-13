@@ -54,9 +54,8 @@ This project includes a complete dev container with leJOS NXJ pre-installed:
 
 1. Open in GitHub Codespaces or VS Code with Dev Containers extension
 2. Container will automatically install leJOS NXJ tools
-3. Build and test immediately:
+3. Build immediately:
    ```bash
-   ./test_environment.sh  # Verify installation
    ./build_dynamic.sh     # Build programs
    ```
 
@@ -105,9 +104,6 @@ See [LEJOS_SETUP.md](LEJOS_SETUP.md) for detailed setup instructions.
 ### 3. Build and Deploy
 
 ```bash
-# Test environment
-./test_environment.sh
-
 # Build all components
 ./build_dynamic.sh
 

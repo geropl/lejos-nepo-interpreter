@@ -9,6 +9,60 @@ import java.util.*;
  */
 public class SimpleXMLParser {
     
+    // Helper methods for String operations not available in leJOS
+    private static boolean stringEndsWith(String str, String suffix) {
+        if (str.length() < suffix.length()) return false;
+        return str.substring(str.length() - suffix.length()).equals(suffix);
+    }
+    
+    private static boolean stringStartsWith(String str, String prefix) {
+        if (str.length() < prefix.length()) return false;
+        return str.substring(0, prefix.length()).equals(prefix);
+    }
+    
+    private static boolean stringContains(String str, String substring) {
+        return str.indexOf(substring) != -1;
+    }
+    
+    private static String[] stringSplit(String str, String delimiter) {
+        Vector parts = new Vector();
+        int start = 0;
+        int pos = str.indexOf(delimiter);
+        
+        while (pos != -1) {
+            if (pos > start) {
+                parts.addElement(str.substring(start, pos));
+            }
+            start = pos + delimiter.length();
+            pos = str.indexOf(delimiter, start);
+        }
+        
+        if (start < str.length()) {
+            parts.addElement(str.substring(start));
+        }
+        
+        String[] result = new String[parts.size()];
+        for (int i = 0; i < parts.size(); i++) {
+            result[i] = (String) parts.elementAt(i);
+        }
+        return result;
+    }
+    
+    private static String stringTrim(String str) {
+        int start = 0;
+        int end = str.length();
+        
+        while (start < end && str.charAt(start) <= ' ') {
+            start++;
+        }
+        
+        while (end > start && str.charAt(end - 1) <= ' ') {
+            end--;
+        }
+        
+        return str.substring(start, end);
+    }
+
     /**
      * Simple XML element representation
      */
@@ -76,14 +130,14 @@ public class SimpleXMLParser {
     public static XMLElement parseXML(String xmlContent) {
         try {
             // Remove XML declaration and whitespace
-            xmlContent = xmlContent.trim();
-            if (xmlContent.startsWith("<?xml")) {
+            xmlContent = stringTrim(xmlContent);
+            if (stringStartsWith(xmlContent, "<?xml")) {
                 int endDecl = xmlContent.indexOf("?>");
                 if (endDecl != -1) {
-                    xmlContent = xmlContent.substring(endDecl + 2).trim();
+                    xmlContent = stringTrim(xmlContent.substring(endDecl + 2));
                 }
             }
-            
+
             return parseElement(xmlContent, 0).element;
             
         } catch (Exception e) {
@@ -96,14 +150,15 @@ public class SimpleXMLParser {
      */
     public static XMLElement parseFile(String filename) {
         try {
-            FileInputStream fis = new FileInputStream(filename);
+            File file = new File(filename);
+            FileInputStream fis = new FileInputStream(file);
             byte[] buffer = new byte[fis.available()];
             fis.read(buffer);
             fis.close();
             
             String content = new String(buffer);
             return parseXML(content);
-            
+
         } catch (Exception e) {
             return null;
         }
@@ -136,13 +191,13 @@ public class SimpleXMLParser {
         String tagContent = xml.substring(tagStart + 1, tagEnd);
         
         // Check for self-closing tag
-        boolean selfClosing = tagContent.endsWith("/");
+        boolean selfClosing = stringEndsWith(tagContent, "/");
         if (selfClosing) {
-            tagContent = tagContent.substring(0, tagContent.length() - 1).trim();
+            tagContent = stringTrim(tagContent.substring(0, tagContent.length() - 1));
         }
         
-        // Parse tag name and attributes
-        String[] parts = tagContent.split("\\s+");
+        // Parse tag name and attributes - split on whitespace
+        String[] parts = stringSplit(tagContent, " ");
         String tagName = parts[0];
         
         XMLElement element = new XMLElement(tagName);
@@ -155,7 +210,7 @@ public class SimpleXMLParser {
                 String attrName = part.substring(0, eqIndex);
                 String attrValue = part.substring(eqIndex + 1);
                 // Remove quotes
-                if (attrValue.startsWith("\"") && attrValue.endsWith("\"")) {
+                if (stringStartsWith(attrValue, "\"") && stringEndsWith(attrValue, "\"")) {
                     attrValue = attrValue.substring(1, attrValue.length() - 1);
                 }
                 element.setAttribute(attrName, attrValue);
@@ -182,8 +237,8 @@ public class SimpleXMLParser {
                 String closeTagName = xml.substring(nextTag + 2, closeEnd);
                 if (tagName.equals(closeTagName)) {
                     // Extract text content if any
-                    String textContent = xml.substring(contentStart, nextTag).trim();
-                    if (textContent.length() > 0 && !textContent.contains("<")) {
+                    String textContent = stringTrim(xml.substring(contentStart, nextTag));
+                    if (textContent.length() > 0 && !stringContains(textContent, "<")) {
                         element.textContent = textContent;
                     }
                     return new ParseResult(element, closeEnd + 1);

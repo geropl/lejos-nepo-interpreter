@@ -9,6 +9,11 @@ echo "=========================================="
 echo "Building Dynamic NEPO Program Runner"
 echo "=========================================="
 
+# Set Java 8 for leJOS NXJ compatibility
+echo "Setting up Java environment..."
+export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+export PATH="/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH"
+
 # Verify leJOS installation
 echo "Checking leJOS NXJ installation..."
 if [ -z "$NXJ_HOME" ]; then
@@ -84,11 +89,11 @@ nxjc -cp . -d build src/SimpleXMLParser.java || { echo "ERROR: Failed to compile
 echo "  → RobotConfiguration.java"
 nxjc -cp .:build -d build src/RobotConfiguration.java || { echo "ERROR: Failed to compile RobotConfiguration.java"; exit 1; }
 
-echo "  → NepoBlockExecutor.java"
-nxjc -cp .:build -d build src/NepoBlockExecutor.java || { echo "ERROR: Failed to compile NepoBlockExecutor.java"; exit 1; }
-
 echo "  → ConfigurationBlockExecutor.java"
 nxjc -cp .:build -d build src/ConfigurationBlockExecutor.java || { echo "ERROR: Failed to compile ConfigurationBlockExecutor.java"; exit 1; }
+
+echo "  → NepoBlockExecutor.java"
+nxjc -cp .:build -d build src/NepoBlockExecutor.java || { echo "ERROR: Failed to compile NepoBlockExecutor.java"; exit 1; }
 
 echo ""
 echo "Compiling file picker components..."
@@ -113,7 +118,7 @@ echo "Creating NXT executable files..."
 
 # Create simple version
 echo "  → Creating NepoSimple.nxj"
-nxjlink -cp build -o NepoSimple.nxj src.NepoInterpreterMain || { echo "ERROR: Failed to create NepoSimple.nxj"; exit 1; }
+nxjlink -cp build -o NepoSimple.nxj NepoInterpreterMain || { echo "ERROR: Failed to create NepoSimple.nxj"; exit 1; }
 
 # Create dynamic version with file picker
 echo "  → Creating NepoDynamic.nxj"

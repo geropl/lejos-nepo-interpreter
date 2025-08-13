@@ -78,16 +78,16 @@ public class RobotConfiguration {
      * Check if a motor is configured on the given port
      */
     public boolean hasMotor(String port) {
-        return motors.containsKey(port);
+        return motors.get(port) != null;
     }
     
     /**
      * Check if a sensor is configured on the given port
      */
     public boolean hasSensor(String port) {
-        return sensors.containsKey(port);
+        return sensors.get(port) != null;
     }
-    
+
     /**
      * Get sensor type for a given port
      */
@@ -104,7 +104,7 @@ public class RobotConfiguration {
         Enumeration motorPorts = motors.keys();
         while (motorPorts.hasMoreElements()) {
             String port = (String) motorPorts.nextElement();
-            if (sensors.containsKey(port)) {
+            if (sensors.get(port) != null) {
                 return false; // Port conflict
             }
         }

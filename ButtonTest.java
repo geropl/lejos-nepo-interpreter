@@ -1,0 +1,1 @@
+import lejos.nxt.*; public class ButtonTest { public static void main(String[] args) { System.out.println("UP: " + Button.UP); System.out.println("DOWN: " + Button.DOWN); System.out.println("LEFT: " + Button.LEFT); System.out.println("RIGHT: " + Button.RIGHT); System.out.println("ENTER: " + Button.ENTER); System.out.println("ESCAPE: " + Button.ESCAPE); } }

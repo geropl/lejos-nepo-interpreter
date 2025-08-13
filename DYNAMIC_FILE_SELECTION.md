@@ -89,10 +89,7 @@ sample_programs/
 
 ### Build Process
 ```bash
-# Make build script executable
-chmod +x build_dynamic.sh
-
-# Build all components
+# Build all components (script is already executable)
 ./build_dynamic.sh
 ```
 

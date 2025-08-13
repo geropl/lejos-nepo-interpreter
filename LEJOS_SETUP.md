@@ -71,40 +71,24 @@ source ~/.bashrc
 
 ## Environment Verification
 
-Use the provided test script to verify your installation:
+You can verify your installation by running the build script:
 
 ```bash
-# Make executable and run
-chmod +x test_environment.sh
-./test_environment.sh
+./build_dynamic.sh
 ```
 
-Expected output:
+If the environment is properly configured, you should see:
 ```
 ==========================================
-Testing leJOS NXJ Environment
+Building Dynamic NEPO Program Runner
 ==========================================
-Environment Variables:
-  NXJ_HOME: /opt/lejos_nxj
-  JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
-  PATH: /opt/lejos_nxj/bin:...
-
-Java Installation:
-openjdk version "1.8.0_..."
-✓ Java found
-
-leJOS NXJ Tools:
-✓ nxjc found at /opt/lejos_nxj/bin/nxjc
-✓ nxjlink found at /opt/lejos_nxj/bin/nxjlink
-✓ nxjupload found at /opt/lejos_nxj/bin/nxjupload
-✓ nxj found at /opt/lejos_nxj/bin/nxj
-
-leJOS Installation:
-✓ leJOS directory exists: /opt/lejos_nxj
-
-Testing Compilation:
-✓ Compilation successful
-✓ Linking successful
+Setting up Java environment...
+Checking leJOS NXJ installation...
+Verifying leJOS tools...
+✓ leJOS NXJ tools found
+✓ NXJ_HOME: /opt/lejos_nxj
+...
+BUILD SUCCESSFUL!
 ==========================================
 ```
 
@@ -282,7 +266,7 @@ nxjlink -verbose -cp build -o MyProgram.nxj MyProgram
 
 ### Typical Development Cycle
 1. **Edit** Java source files
-2. **Build** using `./build_dynamic.sh`
+2. **Build** using `./build_dynamic.sh` (includes verification)
 3. **Upload** .nxj files to NXT
 4. **Test** programs on NXT
 5. **Debug** and repeat
@@ -294,16 +278,15 @@ project/
 ├── sample_programs/        # XML test programs
 ├── build/                  # Compiled classes (generated)
 ├── *.nxj                  # NXT executables (generated)
-├── build_dynamic.sh       # Build script
-└── test_environment.sh    # Environment test
+└── build_dynamic.sh       # Build script
 ```
 
 ### Best Practices
-1. **Always test environment** before building
-2. **Use build script** for consistent compilation
-3. **Keep source organized** in src/ directory
-4. **Version control** .java files, not .class or .nxj
-5. **Test on actual NXT** hardware when possible
+1. **Use build script** for consistent compilation
+2. **Keep source organized** in src/ directory
+3. **Version control** .java files, not .class or .nxj
+4. **Test on actual NXT** hardware when possible
+5. **Check build output** for any warnings or errors
 
 ## Advanced Configuration
 
