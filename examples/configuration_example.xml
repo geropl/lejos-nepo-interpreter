@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blockSet robottype="nxt">
+  <config>
+    <block type="robBrick_EV3-Brick" id="config1">
+      <field name="WHEEL_DIAMETER">5.6</field>
+      <field name="TRACK_WIDTH">12</field>
+      <statement name="ST">
+        <block type="robBrick_motor_big" id="config2">
+          <field name="MOTORPORT">B</field>
+          <field name="MOTOR_REGULATION">TRUE</field>
+          <field name="MOTOR_REVERSE">OFF</field>
+          <field name="MOTOR_DRIVE">RIGHT</field>
+          <next>
+            <block type="robBrick_motor_big" id="config3">
+              <field name="MOTORPORT">C</field>
+              <field name="MOTOR_REGULATION">TRUE</field>
+              <field name="MOTOR_REVERSE">OFF</field>
+              <field name="MOTOR_DRIVE">LEFT</field>
+              <next>
+                <block type="robBrick_touch" id="config4">
+                  <field name="SENSORPORT">1</field>
+                  <next>
+                    <block type="robBrick_ultrasonic" id="config5">
+                      <field name="SENSORPORT">4</field>
+                    </block>
+                  </next>
+                </block>
+              </next>
+            </block>
+          </next>
+        </block>
+      </statement>
+    </block>
+  </config>
+  <instance x="384" y="50">
+    <block type="robControls_start" id="1">
+      <statement name="ST">
+        <block type="robActions_display_text" id="2">
+          <value name="OUT">
+            <block type="text" id="3">
+              <field name="TEXT">Config Test</field>
+            </block>
+          </value>
+          <next>
+            <block type="robActions_motor_on" id="4">
+              <field name="MOTORPORT">B</field>
+              <field name="MOTORROTATION">ROTATIONS</field>
+              <value name="POWER">
+                <block type="math_number" id="5">
+                  <field name="NUM">30</field>
+                </block>
+              </value>
+              <value name="VALUE">
+                <block type="math_number" id="6">
+                  <field name="NUM">1</field>
+                </block>
+              </value>
+              <next>
+                <block type="robActions_display_text" id="7">
+                  <value name="OUT">
+                    <block type="text" id="8">
+                      <field name="TEXT">Config OK!</field>
+                    </block>
+                  </value>
+                </block>
+              </next>
+            </block>
+          </next>
+        </block>
+      </statement>
+    </block>
+  </instance>
+</blockSet>

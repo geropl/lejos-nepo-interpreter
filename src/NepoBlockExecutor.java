@@ -13,6 +13,30 @@ public class NepoBlockExecutor {
     // Hardware references
     private static Hashtable variables = new Hashtable();
     private boolean running = true;
+    private RobotConfiguration robotConfig;
+    private ConfigurationBlockExecutor configExecutor;
+
+    /**
+     * Constructor
+     */
+    public NepoBlockExecutor() {
+        configExecutor = new ConfigurationBlockExecutor();
+        robotConfig = configExecutor.createDefaultConfiguration(); // Default config
+    }
+    
+    /**
+     * Set robot configuration from XML config section
+     */
+    public void setConfiguration(SimpleXMLParser.XMLElement configElement) {
+        robotConfig = configExecutor.parseConfiguration(configElement);
+    }
+    
+    /**
+     * Get current robot configuration
+     */
+    public RobotConfiguration getConfiguration() {
+        return robotConfig;
+    }
     
     /**
      * Execute a block based on its type and parameters
@@ -608,6 +632,11 @@ public class NepoBlockExecutor {
      * Get motor by port letter
      */
     private NXTRegulatedMotor getMotor(String port) {
+        // Check if motor is configured
+        if (robotConfig != null && !robotConfig.hasMotor(port)) {
+            return null; // Motor not configured
+        }
+        
         if ("A".equals(port)) return Motor.A;
         if ("B".equals(port)) return Motor.B;
         if ("C".equals(port)) return Motor.C;
@@ -618,6 +647,11 @@ public class NepoBlockExecutor {
      * Get sensor port by number string
      */
     private SensorPort getSensorPort(String port) {
+        // Check if sensor is configured
+        if (robotConfig != null && !robotConfig.hasSensor(port)) {
+            return null; // Sensor not configured
+        }
+        
         if ("1".equals(port)) return SensorPort.S1;
         if ("2".equals(port)) return SensorPort.S2;
         if ("3".equals(port)) return SensorPort.S3;
@@ -625,6 +659,24 @@ public class NepoBlockExecutor {
         return SensorPort.S1;
     }
     
+    /**
+     * Check if a sensor of the expected type is configured on the port
+     */
+    private boolean isSensorConfigured(String port, String expectedType) {
+        if (robotConfig == null) return true; // Default behavior
+        
+        String configuredType = robotConfig.getSensorType(port);
+        return expectedType.equals(configuredType);
+    }
+    
+    /**
+     * Get motor configuration for advanced motor control
+     */
+    private RobotConfiguration.MotorConfig getMotorConfig(String port) {
+        if (robotConfig == null) return null;
+        return robotConfig.getMotor(port);
+    }
+
     /**
      * Execute comparison operation
      */
