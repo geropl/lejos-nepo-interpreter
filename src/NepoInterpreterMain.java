@@ -10,13 +10,13 @@ import lejos.util.Delay;
 public class NepoInterpreterMain {
     
     public static void main(String[] args) {
-        LCD.clear();
-        LCD.drawString("NEPO Interpreter", 0, 0);
-        LCD.drawString("v2.0 Dynamic", 0, 1);
-        LCD.refresh();
-        Delay.msDelay(1500);
-        
         try {
+            LCD.clear();
+            LCD.drawString("NEPO Interpreter", 0, 0);
+            LCD.drawString("v2.0 Dynamic", 0, 1);
+            LCD.refresh();
+            Delay.msDelay(1500);
+            
             String xmlFile = null;
             
             // Check if filename provided as argument
@@ -87,33 +87,28 @@ public class NepoInterpreterMain {
             Delay.msDelay(500);
             
             executor.executeBlock(startBlock);
+
+            // Program completion with restart option
+            LCD.clear();
+            LCD.drawString("Program Complete", 0, 0);
+            LCD.drawString("", 0, 1);
+            LCD.drawString("Press ENTER to", 0, 3);
+            LCD.drawString("run another", 0, 4);
+            LCD.drawString("Press ESCAPE", 0, 5);
+            LCD.drawString("to exit", 0, 6);
+            LCD.refresh();
+            
+            int button = Button.waitForAnyPress();
+            if (button == Button.ID_ENTER) {
+                // Restart the program for another file selection
+                main(new String[0]);
+            }
             
         } catch (Exception e) {
-            LCD.clear();
-            LCD.drawString("Error:", 0, 0);
-            LCD.drawString(e.getMessage(), 0, 1);
-            LCD.drawString("Press any key", 0, 6);
-            LCD.refresh();
-            Button.waitForAnyPress();
-        }
-        
-        // Program completion with restart option
-        LCD.clear();
-        LCD.drawString("Program Complete", 0, 0);
-        LCD.drawString("", 0, 1);
-        LCD.drawString("Press ENTER to", 0, 3);
-        LCD.drawString("run another", 0, 4);
-        LCD.drawString("Press ESCAPE", 0, 5);
-        LCD.drawString("to exit", 0, 6);
-        LCD.refresh();
-        
-        int button = Button.waitForAnyPress();
-        if (button == Button.ID_ENTER) {
-            // Restart the program for another file selection
-            main(new String[0]);
+            CrashLogger.handleException(e);
         }
     }
-    
+
     /**
      * Find the start block in the XML structure
      */

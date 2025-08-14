@@ -65,6 +65,7 @@ REQUIRED_FILES=(
     "src/RobotConfiguration.java"
     "src/NepoBlockExecutor.java"
     "src/ConfigurationBlockExecutor.java"
+    "src/CrashLogger.java"
     "src/FilePicker.java"
     "AdvancedFilePicker.java"
     "src/NepoInterpreterMain.java"
@@ -80,11 +81,17 @@ for file in "${REQUIRED_FILES[@]}"; do
 done
 
 echo ""
+echo "Compiling utility classes first..."
+
+echo "  → CrashLogger.java"
+nxjc -cp . -d build src/CrashLogger.java || { echo "ERROR: Failed to compile CrashLogger.java"; exit 1; }
+
+echo ""
 echo "Compiling core components..."
 
 # Compile in dependency order with error checking
 echo "  → SimpleXMLParser.java"
-nxjc -cp . -d build src/SimpleXMLParser.java || { echo "ERROR: Failed to compile SimpleXMLParser.java"; exit 1; }
+nxjc -cp .:build -d build src/SimpleXMLParser.java || { echo "ERROR: Failed to compile SimpleXMLParser.java"; exit 1; }
 
 echo "  → RobotConfiguration.java"
 nxjc -cp .:build -d build src/RobotConfiguration.java || { echo "ERROR: Failed to compile RobotConfiguration.java"; exit 1; }
@@ -103,6 +110,7 @@ nxjc -cp .:build -d build src/FilePicker.java || { echo "ERROR: Failed to compil
 
 echo "  → AdvancedFilePicker.java"
 nxjc -cp .:build -d build AdvancedFilePicker.java || { echo "ERROR: Failed to compile AdvancedFilePicker.java"; exit 1; }
+
 
 echo ""
 echo "Compiling main programs..."
@@ -158,7 +166,7 @@ echo "=========================================="
 echo ""
 echo "Generated files:"
 echo "  NepoSimple.nxj  - Basic NEPO interpreter with file picker"
-echo "  NepoDynamic.nxj - Full dynamic program runner"
+echo "  NepoDynamic.nxj - Full dynamic program runner with crash logging"
 echo ""
 echo "To upload to NXT:"
 echo "  nxjupload NepoSimple.nxj"

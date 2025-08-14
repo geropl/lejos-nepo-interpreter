@@ -11,25 +11,30 @@ import lejos.util.Delay;
 public class DynamicNepoRunner {
     
     public static void main(String[] args) {
-        showWelcomeScreen();
-        
-        while (true) {
-            String selectedFile = selectProgram();
+        try {
+            showWelcomeScreen();
             
-            if (selectedFile == null) {
-                showExitScreen();
-                break;
+            while (true) {
+                String selectedFile = selectProgram();
+                
+                if (selectedFile == null) {
+                    showExitScreen();
+                    break;
+                }
+                
+                executeProgram(selectedFile);
+                
+                if (!askForAnother()) {
+                    showExitScreen();
+                    break;
+                }
             }
             
-            executeProgram(selectedFile);
-            
-            if (!askForAnother()) {
-                showExitScreen();
-                break;
-            }
+        } catch (Exception e) {
+            CrashLogger.handleException(e);
         }
     }
-    
+
     /**
      * Show welcome screen
      */
@@ -79,52 +84,47 @@ public class DynamicNepoRunner {
         LCD.drawString("Loading...", 0, 3);
         LCD.refresh();
         
-        try {
-            // Parse the XML program
-            SimpleXMLParser.XMLElement root = SimpleXMLParser.parseFile(filename);
-            if (root == null) {
-                showError("Failed to parse XML file");
-                return;
-            }
-            
-            LCD.drawString("XML parsed OK", 0, 4);
-            LCD.refresh();
-            Delay.msDelay(1000);
-            
-            // Find the start block
-            SimpleXMLParser.XMLElement startBlock = findStartBlock(root);
-            if (startBlock == null) {
-                showError("No start block found in program");
-                return;
-            }
-            
-            LCD.drawString("Start block found", 0, 5);
-            LCD.refresh();
-            Delay.msDelay(1000);
-            
-            // Create executor and run program
-            NepoBlockExecutor executor = new NepoBlockExecutor();
-            
-            LCD.clear();
-            LCD.drawString("Running:", 0, 0);
-            LCD.drawString(filename, 0, 1);
-            LCD.drawString("", 0, 2);
-            LCD.drawString("Press ESCAPE", 0, 6);
-            LCD.drawString("to stop", 0, 7);
-            LCD.refresh();
-            
-            executor.executeBlock(startBlock);
-            
-            LCD.clear();
-            LCD.drawString("Program", 0, 2);
-            LCD.drawString("completed", 0, 3);
-            LCD.drawString("successfully", 0, 4);
-            LCD.refresh();
-            Delay.msDelay(2000);
-            
-        } catch (Exception e) {
-            showError("Runtime error: " + e.getMessage());
+        // Parse the XML program
+        SimpleXMLParser.XMLElement root = SimpleXMLParser.parseFile(filename);
+        if (root == null) {
+            showError("Failed to parse XML file");
+            return;
         }
+        
+        LCD.drawString("XML parsed OK", 0, 4);
+        LCD.refresh();
+        Delay.msDelay(1000);
+        
+        // Find the start block
+        SimpleXMLParser.XMLElement startBlock = findStartBlock(root);
+        if (startBlock == null) {
+            showError("No start block found in program");
+            return;
+        }
+        
+        LCD.drawString("Start block found", 0, 5);
+        LCD.refresh();
+        Delay.msDelay(1000);
+        
+        // Create executor and run program
+        NepoBlockExecutor executor = new NepoBlockExecutor();
+        
+        LCD.clear();
+        LCD.drawString("Running:", 0, 0);
+        LCD.drawString(filename, 0, 1);
+        LCD.drawString("", 0, 2);
+        LCD.drawString("Press ESCAPE", 0, 6);
+        LCD.drawString("to stop", 0, 7);
+        LCD.refresh();
+        
+        executor.executeBlock(startBlock);
+        
+        LCD.clear();
+        LCD.drawString("Program", 0, 2);
+        LCD.drawString("completed", 0, 3);
+        LCD.drawString("successfully", 0, 4);
+        LCD.refresh();
+        Delay.msDelay(2000);
     }
     
     /**

@@ -133,6 +133,39 @@ The test suite includes:
 
 Test reports are generated in `test/` directory as HTML, JSON, and text formats.
 
+### 5. Debugging on NXT Hardware
+
+When running on real NXT hardware, crashes are automatically logged:
+
+```bash
+# After crashes, download detailed logs
+nxjcontrol  # Use GUI to transfer crash.log from NXT to PC
+```
+
+**Debugging Features:**
+- **Useful Error Messages** - Context, exception type, and message on NXT screen
+- **Complete Stack Traces** - Full details written to crash.log file
+- **System Information** - Memory usage and Java version in logs
+- **Easy File Transfer** - Use nxjcontrol GUI to get crash.log
+
+**What you see on NXT screen:**
+```
+ERROR #1
+Main Execution
+NullPointerException
+Object is null
+
+Logged to
+crash.log
+Press any key
+```
+
+**What you get in crash.log:**
+- Complete stack trace with line numbers
+- Exception details and context
+- System memory information
+- Timestamp for each crash
+
 ### 5. Run on NXT
 
 1. On your NXT, navigate to Files
