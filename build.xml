@@ -4,14 +4,23 @@
     <description>
         NEPO XML Interpreter for leJOS NXT
         Compiles and uploads NEPO interpreter to NXT brick
+        
+        Usage:
+          ant deploy        - Production build and upload
+          ant debug         - Debug build with remote console support
+          ant console       - Start remote console (requires debug build)
     </description>
-    
+
     <!-- Properties -->
     <property name="src.dir" value="src"/>
     <property name="build.dir" value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
     <property name="jar.file" value="${build.dir}/NepoInterpreter.jar"/>
+    <property name="debug.file" value="${build.dir}/NepoInterpreter.nxd"/>
     
+    <!-- Debug mode property (can be overridden with -Ddebug=true) -->
+    <property name="debug" value="false"/>
+
     <!-- leJOS NXT paths - adjust these to your leJOS installation -->
     <property name="lejos.home" value="/opt/lejos_nxj"/>
     <property name="lejos.pc.jar" value="${lejos.home}/lib/pc/pccomm.jar"/>
@@ -61,14 +70,53 @@
         </jar>
     </target>
     
-    <!-- Link and upload to NXT -->
-    <target name="upload" depends="jar">
-        <java classname="lejos.pc.tools.NXJUpload" fork="true">
+    <!-- Link NXJ binary (production) -->
+    <target name="link" depends="compile">
+        <java classname="lejos.pc.tools.NXJLink" fork="true">
             <classpath refid="pc.classpath"/>
-            <arg value="${jar.file}"/>
+            <arg value="-o"/>
+            <arg value="${build.dir}/NepoInterpreter.nxj"/>
+            <arg value="-cp"/>
+            <arg value="${classes.dir}"/>
+            <arg value="NepoInterpreterMain"/>
         </java>
     </target>
     
+    <!-- Link NXJ binary with debug info -->
+    <target name="link-debug" depends="compile">
+        <echo message="Building with debug information..."/>
+        <java classname="lejos.pc.tools.NXJLink" fork="true">
+            <classpath refid="pc.classpath"/>
+            <arg value="-o"/>
+            <arg value="${build.dir}/NepoInterpreter.nxj"/>
+            <arg value="-od"/>
+            <arg value="${debug.file}"/>
+            <arg value="-g"/>
+            <arg value="-gr"/>
+            <arg value="-cp"/>
+            <arg value="${classes.dir}"/>
+            <arg value="NepoInterpreterMain"/>
+        </java>
+        <echo message="Debug info written to: ${debug.file}"/>
+        <echo message="Use 'nxjconsole -di ${debug.file}' for remote debugging"/>
+    </target>
+    
+    <!-- Conditional link target -->
+    <target name="link-conditional" depends="compile">
+        <condition property="link.target" value="link-debug" else="link">
+            <istrue value="${debug}"/>
+        </condition>
+        <antcall target="${link.target}"/>
+    </target>
+
+    <!-- Upload to NXT -->
+    <target name="upload" depends="link-conditional">
+        <java classname="lejos.pc.tools.NXJUpload" fork="true">
+            <classpath refid="pc.classpath"/>
+            <arg value="${build.dir}/NepoInterpreter.nxj"/>
+        </java>
+    </target>
+
     <!-- Upload program XML file -->
     <target name="upload-xml">
         <java classname="lejos.pc.tools.NXJUpload" fork="true">
@@ -80,6 +128,34 @@
     <!-- Complete build and upload -->
     <target name="deploy" depends="upload,upload-xml">
         <echo message="NEPO Interpreter deployed to NXT"/>
+        <condition property="debug.message" value="Debug mode enabled - use 'nxjconsole -di ${debug.file}' for remote debugging" else="Production build deployed">
+            <istrue value="${debug}"/>
+        </condition>
+        <echo message="${debug.message}"/>
     </target>
     
+    <!-- Debug-specific targets -->
+    <target name="debug" depends="init">
+        <echo message="Building in DEBUG mode..."/>
+        <antcall target="deploy">
+            <param name="debug" value="true"/>
+        </antcall>
+    </target>
+    
+    <!-- Start remote console (requires debug build) -->
+    <target name="console">
+        <condition property="debug.file.exists">
+            <available file="${debug.file}"/>
+        </condition>
+        <fail unless="debug.file.exists" message="Debug file not found. Run 'ant debug' first."/>
+        <echo message="Starting remote console..."/>
+        <echo message="Connect your NXT and run the program, then press Enter"/>
+        <input message="Press Enter when ready..."/>
+        <java classname="lejos.pc.tools.NXJConsole" fork="true">
+            <classpath refid="pc.classpath"/>
+            <arg value="-di"/>
+            <arg value="${debug.file}"/>
+        </java>
+    </target>
+
 </project>

@@ -47,6 +47,41 @@ nepo-interpreter/
 └── README.md                   # This file
 ```
 
+## Build Options
+
+The project supports both production and debug builds:
+
+### Production Build
+```bash
+# Using shell script
+./build.sh
+
+# Using Ant
+ant deploy
+```
+
+### Debug Build (with Remote Console)
+```bash
+# Using shell script  
+./build.sh debug
+
+# Using Ant
+ant debug
+```
+
+**Debug builds include:**
+- Full stack traces with proper class and method names
+- Line number information for exceptions
+- Remote console support for real-time debugging
+- Debug info file (`.nxd`) for post-mortem analysis
+
+**To use remote debugging:**
+1. Build with debug option
+2. Upload the program to NXT
+3. Start remote console: `nxjconsole -di build/NepoInterpreter.nxd`
+4. Run the program on NXT
+5. View detailed debugging info on PC console
+
 ## Quick Start
 
 ### Dev Container (Recommended)
@@ -56,8 +91,9 @@ This project includes a complete dev container with leJOS NXJ pre-installed:
 2. Container will automatically install leJOS NXJ tools
 3. Build and test:
    ```bash
-   ./build_dynamic.sh     # Build programs
-   ./run_tests.sh         # Run all tests
+   ./build_dynamic.sh           # Production build
+   ./build_dynamic.sh debug     # Debug build with remote console
+   ./run_tests.sh               # Run all tests
    ```
 
 ### Manual Setup
@@ -69,6 +105,30 @@ See [LEJOS_SETUP.md](LEJOS_SETUP.md) for detailed installation instructions.
 2. **Java 8 JDK** - Required for leJOS NXJ compatibility  
 3. **Open Roberta Lab** - For creating visual programs
 4. **USB connection** - For uploading to NXT (optional for development)
+
+## Debugging and Error Handling
+
+### Crash Logger
+The interpreter includes a comprehensive crash logging system:
+
+- **Screen Display** - Shows error context and type on NXT LCD
+- **File Logging** - Complete crash details saved to `crash.log`
+- **Memory Info** - System memory status at crash time
+- **Stack Traces** - Full call stack information (numeric format)
+
+### Debug vs Production Builds
+
+| Feature | Production | Debug |
+|---------|------------|-------|
+| Exception Display | Numeric codes | Full class names |
+| Stack Traces | Method numbers | Method names + line numbers |
+| Remote Console | No | Yes |
+| File Size | Smaller | Larger |
+| Performance | Faster | Slower |
+
+**For Development:** Use debug builds with remote console for detailed error information.
+
+**For Deployment:** Use production builds for optimal performance and memory usage.
 
 ## New Features
 

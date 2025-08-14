@@ -3,6 +3,7 @@
 
 # Ignore all NXT programs
 *.nxj
+*.nxd
 
 # Ignore build directory
 build/

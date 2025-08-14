@@ -26,6 +26,27 @@ The dynamic file selection system provides two file picker implementations:
 - File size formatting (B, K, M)
 - Multiple selection modes
 
+## Build Options
+
+The dynamic file selection system supports both production and debug builds:
+
+### Production Build
+```bash
+./build_dynamic.sh
+```
+- Optimized for performance and memory usage
+- Numeric exception codes in crash logs
+- Smaller binary size
+
+### Debug Build
+```bash
+./build_dynamic.sh debug
+```
+- Full debugging support with remote console
+- Proper exception class names and line numbers
+- Debug info files (`.nxd`) for post-mortem analysis
+- Real-time debugging via PC console
+
 ## Usage
 
 ### Basic Usage
@@ -88,26 +109,57 @@ sample_programs/
 ## Building and Deployment
 
 ### Build Process
+
+**Production Build:**
 ```bash
-# Build all components (script is already executable)
 ./build_dynamic.sh
+```
+
+**Debug Build:**
+```bash
+./build_dynamic.sh debug
 ```
 
 This creates:
 - `NepoSimple.nxj` - Basic interpreter with file picker
 - `NepoDynamic.nxj` - Full dynamic runner
+- `NepoSimple.nxd` - Debug info (debug build only)
+- `NepoDynamic.nxd` - Debug info (debug build only)
 
 ### Upload to NXT
+
+**Production Deployment:**
 ```bash
 # Upload programs
 nxjupload NepoSimple.nxj
 nxjupload NepoDynamic.nxj
 
 # Upload sample programs
-nxjupload sample_programs/simple_move.xml
-nxjupload sample_programs/sound_test.xml
-nxjupload sample_programs/sensor_demo.xml
+nxjupload sample_programs/*.xml
 ```
+
+**Debug Deployment:**
+```bash
+# Upload programs
+nxjupload NepoSimple.nxj
+nxjupload NepoDynamic.nxj
+
+# Upload sample programs
+nxjupload sample_programs/*.xml
+
+# Start remote console for debugging
+nxjconsole -di NepoSimple.nxd    # For NepoSimple debugging
+nxjconsole -di NepoDynamic.nxd   # For NepoDynamic debugging
+```
+
+### Debug Mode Benefits
+
+When using debug builds:
+- **Real-time debugging** - See program output on PC console
+- **Proper exception names** - Instead of "class 16", see "NullPointerException"
+- **Line numbers** - Exact source code locations for errors
+- **Method names** - Full stack traces with readable method names
+- **Remote monitoring** - Monitor program execution from PC
 
 ## User Interface
 

@@ -2,12 +2,24 @@
 
 # Build script for Dynamic NEPO Program Runner
 # This script compiles all components needed for dynamic file selection
+#
+# Usage:
+#   ./build_dynamic.sh          - Production build
+#   ./build_dynamic.sh debug    - Debug build with remote console support
 
 set -e  # Exit on any error
 
-echo "=========================================="
-echo "Building Dynamic NEPO Program Runner"
-echo "=========================================="
+DEBUG_MODE=false
+if [ "$1" = "debug" ]; then
+    DEBUG_MODE=true
+    echo "=========================================="
+    echo "Building Dynamic NEPO Program Runner (DEBUG)"
+    echo "=========================================="
+else
+    echo "=========================================="
+    echo "Building Dynamic NEPO Program Runner"
+    echo "=========================================="
+fi
 
 # Set Java 8 for leJOS NXJ compatibility
 echo "Setting up Java environment..."
@@ -124,13 +136,31 @@ nxjc -cp .:build -d build DynamicNepoRunner.java || { echo "ERROR: Failed to com
 echo ""
 echo "Creating NXT executable files..."
 
-# Create simple version
-echo "  → Creating NepoSimple.nxj"
-nxjlink -cp build -o NepoSimple.nxj NepoInterpreterMain || { echo "ERROR: Failed to create NepoSimple.nxj"; exit 1; }
-
-# Create dynamic version with file picker
-echo "  → Creating NepoDynamic.nxj"
-nxjlink -cp build -o NepoDynamic.nxj DynamicNepoRunner || { echo "ERROR: Failed to create NepoDynamic.nxj"; exit 1; }
+if [ "$DEBUG_MODE" = true ]; then
+    echo "🐛 Creating DEBUG builds with remote console support..."
+    
+    # Create simple version with debug info
+    echo "  → Creating NepoSimple.nxj (DEBUG)"
+    nxjlink -cp build -o NepoSimple.nxj -od NepoSimple.nxd -g -gr NepoInterpreterMain || { echo "ERROR: Failed to create NepoSimple.nxj"; exit 1; }
+    
+    # Create dynamic version with debug info
+    echo "  → Creating NepoDynamic.nxj (DEBUG)"
+    nxjlink -cp build -o NepoDynamic.nxj -od NepoDynamic.nxd -g -gr DynamicNepoRunner || { echo "ERROR: Failed to create NepoDynamic.nxj"; exit 1; }
+    
+    echo "✓ Debug info files created:"
+    echo "  → NepoSimple.nxd"
+    echo "  → NepoDynamic.nxd"
+else
+    echo "🏭 Creating PRODUCTION builds..."
+    
+    # Create simple version
+    echo "  → Creating NepoSimple.nxj"
+    nxjlink -cp build -o NepoSimple.nxj NepoInterpreterMain || { echo "ERROR: Failed to create NepoSimple.nxj"; exit 1; }
+    
+    # Create dynamic version with file picker
+    echo "  → Creating NepoDynamic.nxj"
+    nxjlink -cp build -o NepoDynamic.nxj DynamicNepoRunner || { echo "ERROR: Failed to create NepoDynamic.nxj"; exit 1; }
+fi
 
 echo ""
 echo "Verifying generated files..."
@@ -167,11 +197,35 @@ echo ""
 echo "Generated files:"
 echo "  NepoSimple.nxj  - Basic NEPO interpreter with file picker"
 echo "  NepoDynamic.nxj - Full dynamic program runner with crash logging"
+
+if [ "$DEBUG_MODE" = true ]; then
+    echo "  NepoSimple.nxd  - Debug info for NepoSimple"
+    echo "  NepoDynamic.nxd - Debug info for NepoDynamic"
+fi
+
 echo ""
 echo "To upload to NXT:"
 echo "  nxjupload NepoSimple.nxj"
 echo "  nxjupload NepoDynamic.nxj"
 echo ""
+
+if [ "$DEBUG_MODE" = true ]; then
+    echo "🐛 DEBUG MODE INSTRUCTIONS:"
+    echo "1. Upload the .nxj files to NXT"
+    echo "2. Upload sample programs (if available)"
+    echo "3. Start remote console for debugging:"
+    echo "   nxjconsole -di NepoSimple.nxd    # For NepoSimple debugging"
+    echo "   nxjconsole -di NepoDynamic.nxd   # For NepoDynamic debugging"
+    echo "4. Run the program on NXT"
+    echo "5. View detailed debugging info on PC console"
+    echo ""
+    echo "🔍 Remote console will show:"
+    echo "  - Proper exception class names"
+    echo "  - Method names with line numbers"
+    echo "  - Real-time program output"
+    echo ""
+fi
+
 if [ -d "sample_programs" ]; then
     echo "To upload sample programs:"
     echo "  nxjupload sample_programs/*.xml"
