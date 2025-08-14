@@ -45,12 +45,21 @@ public class FilePicker {
         // Filter files by extension
         Vector filteredFiles = new Vector();
         for (int i = 0; i < allFiles.length; i++) {
+            // Check for null file entries (can happen in leJOS NXT)
+            if (allFiles[i] == null) {
+                continue;
+            }
+            
             String filename = allFiles[i].getName();
+            if (filename == null) {
+                continue;
+            }
+            
             if (fileExtension == null || stringEndsWith(filename.toLowerCase(), fileExtension.toLowerCase())) {
                 filteredFiles.addElement(filename);
             }
         }
-        
+
         if (filteredFiles.size() == 0) {
             LCD.clear();
             LCD.drawString("No " + fileExtension + " files", 0, 0);
@@ -113,13 +122,22 @@ public class FilePicker {
         Vector fileSizes = new Vector();
         
         for (int i = 0; i < allFiles.length; i++) {
+            // Check for null file entries (can happen in leJOS NXT)
+            if (allFiles[i] == null) {
+                continue;
+            }
+            
             String filename = allFiles[i].getName();
+            if (filename == null) {
+                continue;
+            }
+            
             if (fileExtension == null || stringEndsWith(filename.toLowerCase(), fileExtension.toLowerCase())) {
                 filteredFiles.addElement(filename);
                 fileSizes.addElement(new Long(allFiles[i].length()));
             }
         }
-        
+
         if (filteredFiles.size() == 0) {
             showError("No " + fileExtension + " files found");
             return null;
