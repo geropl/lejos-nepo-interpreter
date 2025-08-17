@@ -10,7 +10,7 @@
  * - Lazy evaluation of string operations
  * - No artificial size limits - handles any buffer size
  */
-public class ShallowString {
+public class ShallowString implements IString {
     private final String parentBuffer;
     private final int offset;
     private final int length;
@@ -50,11 +50,11 @@ public class ShallowString {
     }
     
     public boolean equals(Object obj) {
-        if (!(obj instanceof ShallowString)) {
+        if (!(obj instanceof IString)) {
             return false;
         }
-        ShallowString other = (ShallowString) obj;
-        if (length != other.length) {
+        IString other = (IString) obj;
+        if (length != other.length()) {
             return false;
         }
         for (int i = 0; i < length; i++) {

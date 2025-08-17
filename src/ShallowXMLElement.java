@@ -11,23 +11,23 @@ import java.util.*;
  * 
  * Achieves 76% memory reduction vs traditional XML parsing
  */
-public class ShallowXMLElement {
+public class ShallowXMLElement implements IXMLElement {
     // Core shallow data - always present (24 bytes total)
-    private final ShallowString allContent;    // Full element including tags
-    private final ShallowString openTag;       // <tag attr="val">
-    private final ShallowString innerContent;  // Content between open/close tags
+    private final IString allContent;    // Full element including tags
+    private final IString openTag;       // <tag attr="val">
+    private final IString innerContent;  // Content between open/close tags
     
     // Lazy materialized data - created on demand
     private String tagName = null;             // Extracted from openTag
-    private Hashtable<String, ShallowString> attributes = null;       // Parsed from openTag
-    private Vector<ShallowXMLElement> children = null;            // Parsed from innerContent
+    private Hashtable<String, IString> attributes = null;       // Parsed from openTag
+    private Vector<IXMLElement> children = null;            // Parsed from innerContent
     private String textContent = null;         // Text content if no children
     
     // State tracking
     private boolean attributesParsed = false;
     private boolean childrenParsed = false;
     
-    public ShallowXMLElement(ShallowString allContent, ShallowString openTag, ShallowString innerContent) {
+    public ShallowXMLElement(IString allContent, IString openTag, IString innerContent) {
         this.allContent = allContent;
         this.openTag = openTag;
         this.innerContent = innerContent;
@@ -55,7 +55,7 @@ public class ShallowXMLElement {
     /**
      * Get attribute value - lazy parsing of attributes
      */
-    public ShallowString getAttribute(String name) {
+    public IString getAttribute(String name) {
         if (!attributesParsed) {
             parseAttributes();
         }
@@ -65,14 +65,14 @@ public class ShallowXMLElement {
     /**
      * Get child element by tag name - lazy parsing of children
      */
-    public ShallowXMLElement getChild(String tagName) {
+    public IXMLElement getChild(String tagName) {
         if (!childrenParsed) {
             parseChildren();
         }
         
         if (children != null) {
             for (int i = 0; i < children.size(); i++) {
-                ShallowXMLElement child = (ShallowXMLElement) children.elementAt(i);
+                IXMLElement child = children.elementAt(i);
                 if (tagName.equals(child.getTagName())) {
                     return child;
                 }
@@ -84,15 +84,15 @@ public class ShallowXMLElement {
     /**
      * Get all children with specific tag name
      */
-    public Vector<ShallowXMLElement> getChildren(String tagName) {
+    public Vector<IXMLElement> getChildren(String tagName) {
         if (!childrenParsed) {
             parseChildren();
         }
         
-        Vector<ShallowXMLElement> result = new Vector<ShallowXMLElement>();
+        Vector<IXMLElement> result = new Vector<IXMLElement>();
         if (children != null) {
             for (int i = 0; i < children.size(); i++) {
-                ShallowXMLElement child = children.elementAt(i);
+                IXMLElement child = children.elementAt(i);
                 if (tagName.equals(child.getTagName())) {
                     result.addElement(child);
                 }
@@ -104,19 +104,19 @@ public class ShallowXMLElement {
     /**
      * Get all children (regardless of tag name)
      */
-    public Vector<ShallowXMLElement> getAllChildren() {
+    public Vector<IXMLElement> getAllChildren() {
         if (!childrenParsed) {
             parseChildren();
         }
         
         if (children != null) {
-            Vector<ShallowXMLElement> result = new Vector<ShallowXMLElement>();
+            Vector<IXMLElement> result = new Vector<IXMLElement>();
             for (int i = 0; i < children.size(); i++) {
                 result.addElement(children.elementAt(i));
             }
             return result;
         }
-        return new Vector<ShallowXMLElement>();
+        return new Vector<IXMLElement>();
     }
 
     /**
@@ -154,17 +154,17 @@ public class ShallowXMLElement {
         }
         
         // Extract attribute string: ' attr1="val1" attr2="val2"'
-        ShallowString attrString = openTag.substring(spacePos + 1, closePos);
-        
+        IString attrString = openTag.substring(spacePos + 1, closePos);
+
         // Simple attribute parsing (handles basic cases)
-        attributes = new Hashtable<String, ShallowString>();
+        attributes = new Hashtable<String, IString>();
         parseAttributeString(attrString);
     }
     
     /**
      * Parse attribute string into hashtable
      */
-    private void parseAttributeString(ShallowString attrString) {
+    private void parseAttributeString(IString attrString) {
         int pos = 0;
         while (pos < attrString.length()) {
             // Skip whitespace
@@ -195,7 +195,7 @@ public class ShallowXMLElement {
                 pos++;
             }
             
-            ShallowString attrValue = attrString.substring(valueStart, pos);
+            IString attrValue = attrString.substring(valueStart, pos);
             attributes.put(attrName, attrValue);
             
             pos++; // Skip closing quote
@@ -222,7 +222,7 @@ public class ShallowXMLElement {
     /**
      * Parse child elements from content string
      */
-    private void parseChildElements(ShallowString content) {
+    private void parseChildElements(IString content) {
         int pos = 0;
         
         while (pos < content.length()) {
@@ -242,8 +242,8 @@ public class ShallowXMLElement {
             int tagEnd = content.indexOf('>');
             if (tagEnd == -1) break;
             
-            ShallowString openTagContent = content.substring(pos, tagEnd + 1);
-            
+            IString openTagContent = content.substring(pos, tagEnd + 1);
+
             // Check if self-closing
             if (openTagContent.charAt(openTagContent.length() - 2) == '/') {
                 // Self-closing tag
@@ -270,9 +270,9 @@ public class ShallowXMLElement {
             int closeTagEnd = closeTagStart + closeTagPattern.length();
             
             // Create child element
-            ShallowString childAll = content.substring(pos, closeTagEnd);
-            ShallowString childInner = content.substring(tagEnd + 1, closeTagStart);
-            
+            IString childAll = content.substring(pos, closeTagEnd);
+            IString childInner = content.substring(tagEnd + 1, closeTagStart);
+
             ShallowXMLElement child = new ShallowXMLElement(childAll, openTagContent, childInner);
             children.addElement(child);
             
@@ -283,7 +283,7 @@ public class ShallowXMLElement {
     /**
      * Extract tag name from opening tag
      */
-    private String extractTagName(ShallowString openTag) {
+    private String extractTagName(IString openTag) {
         int spacePos = openTag.indexOf(' ');
         int closePos = openTag.indexOf('>');
         

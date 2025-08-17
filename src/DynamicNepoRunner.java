@@ -86,7 +86,7 @@ public class DynamicNepoRunner {
         LCD.refresh();
         
         // Parse the XML program using ShallowXMLParser
-        ShallowXMLElement root = ShallowXMLParser.parseFile(filename);
+        IXMLElement root = new ShallowXMLParser().parseFile(filename);
         if (root == null) {
             showError("Failed to parse XML file");
             return;
@@ -97,7 +97,7 @@ public class DynamicNepoRunner {
         Delay.msDelay(1000);
         
         // Find the start block
-        ShallowXMLElement startBlock = findStartBlock(root);
+        IXMLElement startBlock = findStartBlock(root);
         if (startBlock == null) {
             showError("No start block found in program");
             return;
@@ -131,13 +131,13 @@ public class DynamicNepoRunner {
     /**
      * Find the start block in the XML structure
      */
-    private static ShallowXMLElement findStartBlock(ShallowXMLElement root) {
+    private static IXMLElement findStartBlock(IXMLElement root) {
         // Look for blockSet -> instance -> block with type="robControls_start"
-        ShallowXMLElement instance = root.getChild("instance");
+        IXMLElement instance = root.getChild("instance");
         if (instance != null) {
-            ShallowXMLElement block = instance.getChild("block");
+            IXMLElement block = instance.getChild("block");
             if (block != null) {
-                ShallowString typeAttr = block.getAttribute("type");
+                IString typeAttr = block.getAttribute("type");
                 if (typeAttr != null && "robControls_start".equals(typeAttr.toString())) {
                     return block;
                 }
@@ -151,18 +151,18 @@ public class DynamicNepoRunner {
     /**
      * Recursively find a block by type
      */
-    private static ShallowXMLElement findBlockByType(ShallowXMLElement element, String blockType) {
+    private static IXMLElement findBlockByType(IXMLElement element, String blockType) {
         if ("block".equals(element.getTagName())) {
-            ShallowString typeAttr = element.getAttribute("type");
+            IString typeAttr = element.getAttribute("type");
             if (typeAttr != null && blockType.equals(typeAttr.toString())) {
                 return element;
             }
         }
         
-        Vector<ShallowXMLElement> children = element.getAllChildren();
+        Vector<IXMLElement> children = element.getAllChildren();
         for (int i = 0; i < children.size(); i++) {
-            ShallowXMLElement child = children.elementAt(i);
-            ShallowXMLElement result = findBlockByType(child, blockType);
+            IXMLElement child = children.elementAt(i);
+            IXMLElement result = findBlockByType(child, blockType);
             if (result != null) {
                 return result;
             }

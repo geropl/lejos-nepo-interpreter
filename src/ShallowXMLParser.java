@@ -12,13 +12,13 @@ import java.io.*;
  * - Lazy materialization: attributes/children loaded on demand
  * - No artificial limits: handles any file size, fails gracefully on OutOfMemoryError
  */
-public class ShallowXMLParser {
+public class ShallowXMLParser implements IXMLParser {
 
     /**
      * Parse XML from file using ShallowString approach
      * Memory usage: ~16KB for 8KB XML file (vs 70KB+ with old approach)
      */
-    public static ShallowXMLElement parseFile(String filename) {
+    public IXMLElement parseFile(String filename) {
         FileInputStream fis = null;
         try {
             File file = new File(filename);
@@ -52,13 +52,13 @@ public class ShallowXMLParser {
     /**
      * Parse XML content using ShallowString approach
      */
-    public static ShallowXMLElement parseXML(String xmlContent) {
+    public IXMLElement parseXML(String xmlContent) {
         try {
             // Create single buffer for entire XML
-            ShallowString xmlBuffer = new ShallowString(xmlContent);
+            IString xmlBuffer = new ShallowString(xmlContent);
             
             // Remove XML declaration if present
-            ShallowString content = xmlBuffer.trim();
+            IString content = xmlBuffer.trim();
             if (content.startsWith("<?xml")) {
                 int endDecl = content.indexOf("?>");
                 if (endDecl != -1) {
@@ -67,7 +67,7 @@ public class ShallowXMLParser {
             }
             
             return parseElement(content);
-            
+
         } catch (Exception e) {
             System.out.println("Parse error: " + e.getMessage());
             return null;
@@ -77,7 +77,7 @@ public class ShallowXMLParser {
     /**
      * Parse single XML element from ShallowString
      */
-    private static ShallowXMLElement parseElement(ShallowString content) {
+    private static IXMLElement parseElement(IString content) {
         if (content.length() == 0 || content.charAt(0) != '<') {
             return null;
         }
@@ -88,8 +88,8 @@ public class ShallowXMLParser {
             return null;
         }
         
-        ShallowString openTag = content.substring(0, openTagEnd + 1);
-        
+        IString openTag = content.substring(0, openTagEnd + 1);
+
         // Check if self-closing
         if (openTag.charAt(openTag.length() - 2) == '/') {
             return new ShallowXMLElement(
@@ -117,16 +117,16 @@ public class ShallowXMLParser {
         int closeTagEnd = closeTagStart + closeTagPattern.length();
         
         // Create element with shallow references
-        ShallowString allContent = content.substring(0, closeTagEnd);
-        ShallowString innerContent = content.substring(openTagEnd + 1, closeTagStart);
-        
+        IString allContent = content.substring(0, closeTagEnd);
+        IString innerContent = content.substring(openTagEnd + 1, closeTagStart);
+
         return new ShallowXMLElement(allContent, openTag, innerContent);
     }
     
     /**
      * Extract tag name from opening tag
      */
-    private static String extractTagNameFromOpenTag(ShallowString openTag) {
+    private static String extractTagNameFromOpenTag(IString openTag) {
         int spacePos = openTag.indexOf(' ');
         int closePos = openTag.indexOf('>');
         

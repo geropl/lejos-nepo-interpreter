@@ -11,7 +11,7 @@ public class ConfigurationBlockExecutor {
     /**
      * Parse configuration from XML and build RobotConfiguration
      */
-    public RobotConfiguration parseConfiguration(ShallowXMLElement configRoot) {
+    public RobotConfiguration parseConfiguration(IXMLElement configRoot) {
         RobotConfiguration config = new RobotConfiguration();
         
         if (configRoot == null) {
@@ -28,8 +28,8 @@ public class ConfigurationBlockExecutor {
     /**
      * Execute a configuration block
      */
-    private void executeConfigBlock(ShallowXMLElement block, RobotConfiguration config) {
-        ShallowString blockTypeAttr = block.getAttribute("type");
+    private void executeConfigBlock(IXMLElement block, RobotConfiguration config) {
+        IString blockTypeAttr = block.getAttribute("type");
         if (blockTypeAttr == null) return;
         
         String blockType = blockTypeAttr.toString();
@@ -55,15 +55,15 @@ public class ConfigurationBlockExecutor {
         }
         
         // Process child blocks
-        Vector<ShallowXMLElement> children = block.getAllChildren();
+        Vector<IXMLElement> children = block.getAllChildren();
         for (int i = 0; i < children.size(); i++) {
-            ShallowXMLElement child = children.elementAt(i);
-            ShallowString nameAttr = child.getAttribute("name");
+            IXMLElement child = children.elementAt(i);
+            IString nameAttr = child.getAttribute("name");
             if ("statement".equals(child.getTagName()) && nameAttr != null && "ST".equals(nameAttr.toString())) {
                 // Process statement children
-                Vector<ShallowXMLElement> statementChildren = child.getAllChildren();
+                Vector<IXMLElement> statementChildren = child.getAllChildren();
                 for (int j = 0; j < statementChildren.size(); j++) {
-                    ShallowXMLElement statementChild = statementChildren.elementAt(j);
+                    IXMLElement statementChild = statementChildren.elementAt(j);
                     if ("block".equals(statementChild.getTagName())) {
                         executeConfigBlock(statementChild, config);
                     }
@@ -77,7 +77,7 @@ public class ConfigurationBlockExecutor {
     /**
      * Execute main brick configuration block
      */
-    private void executeMainBrickBlock(ShallowXMLElement block, RobotConfiguration config) {
+    private void executeMainBrickBlock(IXMLElement block, RobotConfiguration config) {
         // Parse wheel diameter
         String wheelDiameter = getFieldValue(block, "WHEEL_DIAMETER");
         if (wheelDiameter != null) {
@@ -102,7 +102,7 @@ public class ConfigurationBlockExecutor {
     /**
      * Execute motor configuration block
      */
-    private void executeMotorBlock(ShallowXMLElement block, RobotConfiguration config) {
+    private void executeMotorBlock(IXMLElement block, RobotConfiguration config) {
         String motorPort = getFieldValue(block, "MOTORPORT");
         if (motorPort != null) {
             RobotConfiguration.MotorConfig motorConfig = new RobotConfiguration.MotorConfig(motorPort);
@@ -132,7 +132,7 @@ public class ConfigurationBlockExecutor {
     /**
      * Execute sensor configuration block
      */
-    private void executeSensorBlock(ShallowXMLElement block, RobotConfiguration config, String sensorType) {
+    private void executeSensorBlock(IXMLElement block, RobotConfiguration config, String sensorType) {
         String sensorPort = getFieldValue(block, "SENSORPORT");
         if (sensorPort != null) {
             RobotConfiguration.SensorConfig sensorConfig = new RobotConfiguration.SensorConfig(sensorPort, sensorType);
@@ -143,11 +143,11 @@ public class ConfigurationBlockExecutor {
     /**
      * Get field value from a block
      */
-    private String getFieldValue(ShallowXMLElement block, String fieldName) {
-        Vector<ShallowXMLElement> fields = block.getChildren("field");
+    private String getFieldValue(IXMLElement block, String fieldName) {
+        Vector<IXMLElement> fields = block.getChildren("field");
         for (int i = 0; i < fields.size(); i++) {
-            ShallowXMLElement field = fields.elementAt(i);
-            ShallowString nameAttr = field.getAttribute("name");
+            IXMLElement field = fields.elementAt(i);
+            IString nameAttr = field.getAttribute("name");
             if (nameAttr != null && fieldName.equals(nameAttr.toString())) {
                 return field.getTextContent();
             }

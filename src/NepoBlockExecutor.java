@@ -27,7 +27,7 @@ public class NepoBlockExecutor {
     /**
      * Set robot configuration from XML config section
      */
-    public void setConfiguration(ShallowXMLElement configElement) {
+    public void setConfiguration(IXMLElement configElement) {
         robotConfig = configExecutor.parseConfiguration(configElement);
     }
     
@@ -41,10 +41,10 @@ public class NepoBlockExecutor {
     /**
      * Execute a block based on its type and parameters
      */
-    public void executeBlock(ShallowXMLElement block) {
+    public void executeBlock(IXMLElement block) {
         if (!running) return;
         
-        ShallowString blockTypeAttr = block.getAttribute("type");
+        IString blockTypeAttr = block.getAttribute("type");
         if (blockTypeAttr == null) return;
         
         String blockType = blockTypeAttr.toString();
@@ -79,7 +79,7 @@ public class NepoBlockExecutor {
             }
             
             // Execute next block in sequence
-            ShallowXMLElement nextBlock = getNextBlock(block);
+            IXMLElement nextBlock = getNextBlock(block);
             if (nextBlock != null) {
                 executeBlock(nextBlock);
             }
@@ -97,8 +97,8 @@ public class NepoBlockExecutor {
     /**
      * Execute start block - find and execute statement blocks
      */
-    private void executeStartBlock(ShallowXMLElement block) {
-        ShallowXMLElement statement = getStatementBlock(block, "ST");
+    private void executeStartBlock(IXMLElement block) {
+        IXMLElement statement = getStatementBlock(block, "ST");
         if (statement != null) {
             executeBlock(statement);
         }
@@ -107,7 +107,7 @@ public class NepoBlockExecutor {
     /**
      * Execute display text block
      */
-    private void executeDisplayTextBlock(ShallowXMLElement block) {
+    private void executeDisplayTextBlock(IXMLElement block) {
         Object textValue = getValue(block, "OUT");
         if (textValue != null) {
             LCD.clear();
@@ -119,7 +119,7 @@ public class NepoBlockExecutor {
     /**
      * Execute motor on block
      */
-    private void executeMotorOnBlock(ShallowXMLElement block) {
+    private void executeMotorOnBlock(IXMLElement block) {
         String motorPort = getFieldValue(block, "MOTORPORT");
         String rotationType = getFieldValue(block, "MOTORROTATION");
         
@@ -156,7 +156,7 @@ public class NepoBlockExecutor {
     /**
      * Execute motor stop block
      */
-    private void executeMotorStopBlock(ShallowXMLElement block) {
+    private void executeMotorStopBlock(IXMLElement block) {
         String motorPort = getFieldValue(block, "MOTORPORT");
         if (motorPort != null) {
             NXTRegulatedMotor motor = getMotor(motorPort);
@@ -169,7 +169,7 @@ public class NepoBlockExecutor {
     /**
      * Execute wait time block
      */
-    private void executeWaitTimeBlock(ShallowXMLElement block) {
+    private void executeWaitTimeBlock(IXMLElement block) {
         Object waitValue = getValue(block, "WAIT");
         if (waitValue instanceof Double) {
             int milliseconds = ((Double) waitValue).intValue();
@@ -180,10 +180,10 @@ public class NepoBlockExecutor {
     /**
      * Execute if block
      */
-    private void executeIfBlock(ShallowXMLElement block) {
+    private void executeIfBlock(IXMLElement block) {
         Object conditionValue = getValue(block, "IF0");
         if (conditionValue instanceof Boolean && ((Boolean) conditionValue).booleanValue()) {
-            ShallowXMLElement doBlock = getStatementBlock(block, "DO0");
+            IXMLElement doBlock = getStatementBlock(block, "DO0");
             if (doBlock != null) {
                 executeBlock(doBlock);
             }
@@ -193,17 +193,17 @@ public class NepoBlockExecutor {
     /**
      * Execute if-else block
      */
-    private void executeIfElseBlock(ShallowXMLElement block) {
+    private void executeIfElseBlock(IXMLElement block) {
         Object conditionValue = getValue(block, "IF0");
         if (conditionValue instanceof Boolean && ((Boolean) conditionValue).booleanValue()) {
             // Execute IF branch
-            ShallowXMLElement doBlock = getStatementBlock(block, "DO0");
+            IXMLElement doBlock = getStatementBlock(block, "DO0");
             if (doBlock != null) {
                 executeBlock(doBlock);
             }
         } else {
             // Execute ELSE branch
-            ShallowXMLElement elseBlock = getStatementBlock(block, "ELSE");
+            IXMLElement elseBlock = getStatementBlock(block, "ELSE");
             if (elseBlock != null) {
                 executeBlock(elseBlock);
             }
@@ -213,11 +213,11 @@ public class NepoBlockExecutor {
     /**
      * Execute repeat times block
      */
-    private void executeRepeatTimesBlock(ShallowXMLElement block) {
+    private void executeRepeatTimesBlock(IXMLElement block) {
         Object timesValue = getValue(block, "TIMES");
         if (timesValue instanceof Double) {
             int times = ((Double) timesValue).intValue();
-            ShallowXMLElement doBlock = getStatementBlock(block, "DO");
+            IXMLElement doBlock = getStatementBlock(block, "DO");
 
             for (int i = 0; i < times && running; i++) {
                 if (doBlock != null) {
@@ -230,7 +230,7 @@ public class NepoBlockExecutor {
     /**
      * Execute play tone block
      */
-    private void executePlayToneBlock(ShallowXMLElement block) {
+    private void executePlayToneBlock(IXMLElement block) {
         Object frequencyValue = getValue(block, "FREQUENCY");
         Object durationValue = getValue(block, "DURATION");
         
@@ -245,13 +245,13 @@ public class NepoBlockExecutor {
     /**
      * Get value from a value block
      */
-    private Object getValue(ShallowXMLElement parentBlock, String valueName) {
+    private Object getValue(IXMLElement parentBlock, String valueName) {
         Vector values = parentBlock.getChildren("value");
         for (int i = 0; i < values.size(); i++) {
-            ShallowXMLElement value = (ShallowXMLElement) values.elementAt(i);
-            ShallowString nameAttr = value.getAttribute("name");
+            IXMLElement value = (IXMLElement) values.elementAt(i);
+            IString nameAttr = value.getAttribute("name");
             if (nameAttr != null && valueName.equals(nameAttr.toString())) {
-                ShallowXMLElement valueBlock = value.getChild("block");
+                IXMLElement valueBlock = value.getChild("block");
                 if (valueBlock != null) {
                     return evaluateValueBlock(valueBlock);
                 }
@@ -263,8 +263,8 @@ public class NepoBlockExecutor {
     /**
      * Evaluate a value block and return its result
      */
-    private Object evaluateValueBlock(ShallowXMLElement block) {
-        ShallowString blockTypeAttr = block.getAttribute("type");
+    private Object evaluateValueBlock(IXMLElement block) {
+        IString blockTypeAttr = block.getAttribute("type");
         if (blockTypeAttr == null) return null;
         
         String blockType = blockTypeAttr.toString();
@@ -317,7 +317,7 @@ public class NepoBlockExecutor {
             if (condition instanceof Boolean) {
                 while (((Boolean) condition).booleanValue()) {
                     // Execute statements in the loop
-                    ShallowXMLElement statements = getStatementBlock(block, "DO");
+                    IXMLElement statements = getStatementBlock(block, "DO");
                     if (statements != null) {
                         executeBlock(statements);
                     }
@@ -332,7 +332,7 @@ public class NepoBlockExecutor {
             int maxIterations = 10000; // Safety limit
             int iterations = 0;
             while (iterations < maxIterations) {
-                ShallowXMLElement statements = getStatementBlock(block, "DO");
+                IXMLElement statements = getStatementBlock(block, "DO");
                 if (statements != null) {
                     executeBlock(statements);
                 }
@@ -610,11 +610,11 @@ public class NepoBlockExecutor {
     /**
      * Get field value from a block
      */
-    private String getFieldValue(ShallowXMLElement block, String fieldName) {
-        Vector fields = block.getChildren("field");
+    private String getFieldValue(IXMLElement block, String fieldName) {
+        Vector<IXMLElement> fields = block.getChildren("field");
         for (int i = 0; i < fields.size(); i++) {
-            ShallowXMLElement field = (ShallowXMLElement) fields.elementAt(i);
-            ShallowString nameAttr = field.getAttribute("name");
+            IXMLElement field = fields.elementAt(i);
+            IString nameAttr = field.getAttribute("name");
             if (nameAttr != null && fieldName.equals(nameAttr.toString())) {
                 return field.getTextContent();
             }
@@ -625,11 +625,11 @@ public class NepoBlockExecutor {
     /**
      * Get statement block by name
      */
-    private ShallowXMLElement getStatementBlock(ShallowXMLElement parentBlock, String statementName) {
-        Vector statements = parentBlock.getChildren("statement");
+    private IXMLElement getStatementBlock(IXMLElement parentBlock, String statementName) {
+        Vector<IXMLElement> statements = parentBlock.getChildren("statement");
         for (int i = 0; i < statements.size(); i++) {
-            ShallowXMLElement statement = (ShallowXMLElement) statements.elementAt(i);
-            ShallowString nameAttr = statement.getAttribute("name");
+            IXMLElement statement = statements.elementAt(i);
+            IString nameAttr = statement.getAttribute("name");
             if (nameAttr != null && statementName.equals(nameAttr.toString())) {
                 return statement.getChild("block");
             }
@@ -640,8 +640,8 @@ public class NepoBlockExecutor {
     /**
      * Get next block in sequence
      */
-    private ShallowXMLElement getNextBlock(ShallowXMLElement currentBlock) {
-        ShallowXMLElement nextElement = currentBlock.getChild("next");
+    private IXMLElement getNextBlock(IXMLElement currentBlock) {
+        IXMLElement nextElement = currentBlock.getChild("next");
         if (nextElement != null) {
             return nextElement.getChild("block");
         }
