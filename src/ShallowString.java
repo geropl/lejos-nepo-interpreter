@@ -90,7 +90,12 @@ public class ShallowString implements IString {
     }
     
     public int indexOf(char c) {
-        for (int i = 0; i < length; i++) {
+        return indexOf(c, 0);
+    }
+    
+    public int indexOf(char c, int fromIndex) {
+        if (fromIndex < 0) fromIndex = 0;
+        for (int i = fromIndex; i < length; i++) {
             if (charAt(i) == c) {
                 return i;
             }
@@ -99,10 +104,15 @@ public class ShallowString implements IString {
     }
     
     public int indexOf(String str) {
-        if (str.length() > length) {
+        return indexOf(str, 0);
+    }
+    
+    public int indexOf(String str, int fromIndex) {
+        if (fromIndex < 0) fromIndex = 0;
+        if (str.length() > length - fromIndex) {
             return -1;
         }
-        for (int i = 0; i <= length - str.length(); i++) {
+        for (int i = fromIndex; i <= length - str.length(); i++) {
             boolean found = true;
             for (int j = 0; j < str.length(); j++) {
                 if (charAt(i + j) != str.charAt(j)) {
@@ -116,7 +126,7 @@ public class ShallowString implements IString {
         }
         return -1;
     }
-    
+
     public ShallowString trim() {
         int start = 0;
         int end = length;

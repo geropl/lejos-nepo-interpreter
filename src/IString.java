@@ -8,7 +8,9 @@ public interface IString {
 
     boolean startsWith(String prefix);
     int indexOf(char c);
+    int indexOf(char c, int fromIndex);
     int indexOf(String str);
+    int indexOf(String str, int fromIndex);
 
     IString substring(int start);
     IString substring(int start, int end);

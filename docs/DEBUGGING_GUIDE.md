@@ -132,7 +132,7 @@ nxjupload my_program.xml
 nxjcontrol  # Use GUI to get crash.log
 
 # 4. Open crash.log and see:
-# "at SimpleXMLParser.parseFile(SimpleXMLParser.java:123)"
+# "at ShallowXMLParser.parseFile(ShallowXMLParser.java:123)"
 
 # 5. Fix the null check in XML parser at line 123
 # 6. Rebuild and test again

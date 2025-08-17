@@ -36,7 +36,10 @@ nepo-interpreter/
 │   ├── ShallowXMLParser.java       # Memory-optimized XML parser
 │   ├── ShallowString.java          # Memory-efficient string class
 │   ├── ShallowXMLElement.java      # Lazy XML element materialization
-│   ├── SimpleXMLParser.java        # Traditional XML parser (fallback)
+│   ├── ShallowXMLParser.java       # Memory-optimized XML parser
+│   ├── IXMLParser.java             # XML parser interface
+│   ├── IXMLElement.java            # XML element interface
+│   ├── IString.java                # Memory-efficient string interface
 │   ├── NepoBlockExecutor.java      # NEPO block execution engine
 │   ├── FilePicker.java             # Dynamic file selection
 │   ├── CrashLogger.java            # Error handling and logging

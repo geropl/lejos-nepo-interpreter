@@ -103,11 +103,20 @@ echo ""
 echo "Compiling core components..."
 
 # Compile in dependency order with error checking
+echo "  → IString.java"
+nxjc -cp .:build -d build src/IString.java || { echo "ERROR: Failed to compile IString.java"; exit 1; }
+
 echo "  → ShallowString.java"
 nxjc -cp .:build -d build src/ShallowString.java || { echo "ERROR: Failed to compile ShallowString.java"; exit 1; }
 
+echo "  → IXMLElement.java"
+nxjc -cp .:build -d build src/IXMLElement.java || { echo "ERROR: Failed to compile IXMLElement.java"; exit 1; }
+
 echo "  → ShallowXMLElement.java"
 nxjc -cp .:build -d build src/ShallowXMLElement.java || { echo "ERROR: Failed to compile ShallowXMLElement.java"; exit 1; }
+
+echo "  → IXMLParser.java"
+nxjc -cp .:build -d build src/IXMLParser.java || { echo "ERROR: Failed to compile IXMLParser.java"; exit 1; }
 
 echo "  → ShallowXMLParser.java"
 nxjc -cp .:build -d build src/ShallowXMLParser.java || { echo "ERROR: Failed to compile ShallowXMLParser.java"; exit 1; }

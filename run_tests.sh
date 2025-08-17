@@ -19,10 +19,31 @@ mkdir -p build
 if [ ! -f "build/NepoTestRunner.class" ]; then
     echo "⚠ Test classes not found. Compiling tests..."
     
-    # Compile test classes (basic compilation for mock environment)
-    javac -cp . -d build *.java src/*.java 2>/dev/null || {
+    # First compile the core interfaces and implementations from src
+    echo "Compiling core XML classes from src..."
+    javac -cp ../src -d build ../src/IXMLParser.java ../src/IXMLElement.java ../src/IString.java ../src/ShallowXMLParser.java ../src/ShallowXMLElement.java ../src/ShallowString.java 2>/dev/null || {
+        echo "❌ Failed to compile core XML classes from src"
+        exit 1
+    }
+    
+    # Compile test-specific classes
+    echo "Compiling test XML helper classes..."
+    javac -cp ../src:build -d build TestXMLElement.java 2>/dev/null || {
+        echo "❌ Failed to compile test XML helper classes"
+        exit 1
+    }
+    
+    # Then compile test framework classes
+    echo "Compiling test framework..."
+    javac -cp ../src:build:. -d build BlockTestCase.java TestDataManager.java NepoTestFramework.java NepoTestRunner.java TestResult.java TestReport.java TestSuite.java ExpectedResults.java ValidationRules.java MockHardware.java MockDisplay.java MockMotor.java MockSensor.java MockSound.java MockTimer.java MockNepoBlockExecutor.java MockHardwareTest.java 2>/dev/null || {
         echo "ℹ Note: Some test files require leJOS environment for full compilation"
-        echo "ℹ Running available compiled tests..."
+        echo "ℹ Continuing with available compiled tests..."
+    }
+    
+    # Try to compile remaining test files (may fail due to leJOS dependencies)
+    echo "Compiling additional test files..."
+    javac -cp ../src:build:. -d build *.java 2>/dev/null || {
+        echo "ℹ Note: Some test files require leJOS environment and were skipped"
     }
 fi
 
@@ -31,7 +52,7 @@ echo "Running all tests..."
 echo ""
 
 # Run the main test suite
-java -cp .:build NepoTestRunner "$@"
+java -cp ../src:build:. NepoTestRunner "$@"
 
 echo ""
 echo "=========================================="

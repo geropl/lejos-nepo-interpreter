@@ -227,11 +227,11 @@ public class ShallowXMLElement implements IXMLElement {
         
         while (pos < content.length()) {
             // Find next opening tag
-            int tagStart = content.indexOf('<');
+            int tagStart = content.indexOf('<', pos);
             if (tagStart == -1) break;
             
             pos = tagStart;
-            
+
             // Skip if it's a closing tag
             if (pos + 1 < content.length() && content.charAt(pos + 1) == '/') {
                 pos += 2;
@@ -239,9 +239,9 @@ public class ShallowXMLElement implements IXMLElement {
             }
             
             // Find end of opening tag
-            int tagEnd = content.indexOf('>');
+            int tagEnd = content.indexOf('>', pos);
             if (tagEnd == -1) break;
-            
+
             IString openTagContent = content.substring(pos, tagEnd + 1);
 
             // Check if self-closing
@@ -261,7 +261,7 @@ public class ShallowXMLElement implements IXMLElement {
             String tagName = extractTagName(openTagContent);
             String closeTagPattern = "</" + tagName + ">";
             
-            int closeTagStart = content.indexOf(closeTagPattern);
+            int closeTagStart = content.indexOf(closeTagPattern, pos);
             if (closeTagStart == -1) {
                 pos = tagEnd + 1;
                 continue;
