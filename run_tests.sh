@@ -12,12 +12,15 @@ echo "=========================================="
 # Change to test directory
 cd test
 
+# Create test build directory
+mkdir -p build
+
 # Check if test classes are compiled
-if [ ! -f "NepoTestRunner.class" ]; then
+if [ ! -f "build/NepoTestRunner.class" ]; then
     echo "⚠ Test classes not found. Compiling tests..."
     
     # Compile test classes (basic compilation for mock environment)
-    javac -cp . *.java 2>/dev/null || {
+    javac -cp . -d build *.java src/*.java 2>/dev/null || {
         echo "ℹ Note: Some test files require leJOS environment for full compilation"
         echo "ℹ Running available compiled tests..."
     }
@@ -28,7 +31,7 @@ echo "Running all tests..."
 echo ""
 
 # Run the main test suite
-java NepoTestRunner "$@"
+java -cp .:build NepoTestRunner "$@"
 
 echo ""
 echo "=========================================="

@@ -131,8 +131,8 @@ This creates:
 **Production Deployment:**
 ```bash
 # Upload programs
-nxjupload NepoSimple.nxj
-nxjupload NepoDynamic.nxj
+nxjupload target/NepoSimple.nxj
+nxjupload target/NepoDynamic.nxj
 
 # Upload sample programs
 nxjupload sample_programs/*.xml
@@ -141,15 +141,15 @@ nxjupload sample_programs/*.xml
 **Debug Deployment:**
 ```bash
 # Upload programs
-nxjupload NepoSimple.nxj
-nxjupload NepoDynamic.nxj
+nxjupload target/NepoSimple.nxj
+nxjupload target/NepoDynamic.nxj
 
 # Upload sample programs
 nxjupload sample_programs/*.xml
 
 # Start remote console for debugging
-nxjconsole -di NepoSimple.nxd    # For NepoSimple debugging
-nxjconsole -di NepoDynamic.nxd   # For NepoDynamic debugging
+nxjconsole -di target/NepoSimple.nxd    # For NepoSimple debugging
+nxjconsole -di target/NepoDynamic.nxd   # For NepoDynamic debugging
 ```
 
 ### Debug Mode Benefits

@@ -61,11 +61,11 @@ echo "✓ NXJ_HOME: $NXJ_HOME"
 echo "Java version:"
 java -version
 
-# Create build directory
+# Create build directories
 echo ""
 echo "Setting up build environment..."
-rm -rf build
-mkdir -p build
+rm -rf build target
+mkdir -p build target
 
 echo "✓ Build directory created"
 
@@ -74,14 +74,17 @@ echo ""
 echo "Checking source files..."
 REQUIRED_FILES=(
     "src/SimpleXMLParser.java"
+    "src/ShallowString.java"
+    "src/ShallowXMLElement.java"
+    "src/ShallowXMLParser.java"
     "src/RobotConfiguration.java"
     "src/NepoBlockExecutor.java"
     "src/ConfigurationBlockExecutor.java"
     "src/CrashLogger.java"
     "src/FilePicker.java"
-    "AdvancedFilePicker.java"
+    "src/AdvancedFilePicker.java"
     "src/NepoInterpreterMain.java"
-    "DynamicNepoRunner.java"
+    "src/DynamicNepoRunner.java"
 )
 
 for file in "${REQUIRED_FILES[@]}"; do
@@ -105,6 +108,16 @@ echo "Compiling core components..."
 echo "  → SimpleXMLParser.java"
 nxjc -cp .:build -d build src/SimpleXMLParser.java || { echo "ERROR: Failed to compile SimpleXMLParser.java"; exit 1; }
 
+# Compile shallow XML components (depends on SimpleXMLParser)
+echo "  → ShallowString.java"
+nxjc -cp .:build -d build src/ShallowString.java || { echo "ERROR: Failed to compile ShallowString.java"; exit 1; }
+
+echo "  → ShallowXMLElement.java"
+nxjc -cp .:build -d build src/ShallowXMLElement.java || { echo "ERROR: Failed to compile ShallowXMLElement.java"; exit 1; }
+
+echo "  → ShallowXMLParser.java"
+nxjc -cp .:build -d build src/ShallowXMLParser.java || { echo "ERROR: Failed to compile ShallowXMLParser.java"; exit 1; }
+
 echo "  → RobotConfiguration.java"
 nxjc -cp .:build -d build src/RobotConfiguration.java || { echo "ERROR: Failed to compile RobotConfiguration.java"; exit 1; }
 
@@ -121,7 +134,7 @@ echo "  → FilePicker.java"
 nxjc -cp .:build -d build src/FilePicker.java || { echo "ERROR: Failed to compile FilePicker.java"; exit 1; }
 
 echo "  → AdvancedFilePicker.java"
-nxjc -cp .:build -d build AdvancedFilePicker.java || { echo "ERROR: Failed to compile AdvancedFilePicker.java"; exit 1; }
+nxjc -cp .:build -d build src/AdvancedFilePicker.java || { echo "ERROR: Failed to compile AdvancedFilePicker.java"; exit 1; }
 
 
 echo ""
@@ -131,7 +144,7 @@ echo "  → NepoInterpreterMain.java"
 nxjc -cp .:build -d build src/NepoInterpreterMain.java || { echo "ERROR: Failed to compile NepoInterpreterMain.java"; exit 1; }
 
 echo "  → DynamicNepoRunner.java"
-nxjc -cp .:build -d build DynamicNepoRunner.java || { echo "ERROR: Failed to compile DynamicNepoRunner.java"; exit 1; }
+nxjc -cp .:build -d build src/DynamicNepoRunner.java || { echo "ERROR: Failed to compile DynamicNepoRunner.java"; exit 1; }
 
 echo ""
 echo "Creating NXT executable files..."
@@ -141,40 +154,40 @@ if [ "$DEBUG_MODE" = true ]; then
     
     # Create simple version with debug info
     echo "  → Creating NepoSimple.nxj (DEBUG)"
-    nxjlink -cp build -o NepoSimple.nxj -od NepoSimple.nxd -g -gr NepoInterpreterMain || { echo "ERROR: Failed to create NepoSimple.nxj"; exit 1; }
+    nxjlink -cp build -o target/NepoSimple.nxj -od target/NepoSimple.nxd -g -gr NepoInterpreterMain || { echo "ERROR: Failed to create NepoSimple.nxj"; exit 1; }
     
     # Create dynamic version with debug info
     echo "  → Creating NepoDynamic.nxj (DEBUG)"
-    nxjlink -cp build -o NepoDynamic.nxj -od NepoDynamic.nxd -g -gr DynamicNepoRunner || { echo "ERROR: Failed to create NepoDynamic.nxj"; exit 1; }
+    nxjlink -cp build -o target/NepoDynamic.nxj -od target/NepoDynamic.nxd -g -gr DynamicNepoRunner || { echo "ERROR: Failed to create NepoDynamic.nxj"; exit 1; }
     
     echo "✓ Debug info files created:"
-    echo "  → NepoSimple.nxd"
-    echo "  → NepoDynamic.nxd"
+    echo "  → target/NepoSimple.nxd"
+    echo "  → target/NepoDynamic.nxd"
 else
     echo "🏭 Creating PRODUCTION builds..."
     
     # Create simple version
     echo "  → Creating NepoSimple.nxj"
-    nxjlink -cp build -o NepoSimple.nxj NepoInterpreterMain || { echo "ERROR: Failed to create NepoSimple.nxj"; exit 1; }
+    nxjlink -cp build -o target/NepoSimple.nxj NepoInterpreterMain || { echo "ERROR: Failed to create NepoSimple.nxj"; exit 1; }
     
     # Create dynamic version with file picker
     echo "  → Creating NepoDynamic.nxj"
-    nxjlink -cp build -o NepoDynamic.nxj DynamicNepoRunner || { echo "ERROR: Failed to create NepoDynamic.nxj"; exit 1; }
+    nxjlink -cp build -o target/NepoDynamic.nxj DynamicNepoRunner || { echo "ERROR: Failed to create NepoDynamic.nxj"; exit 1; }
 fi
 
 echo ""
 echo "Verifying generated files..."
-if [ -f "NepoSimple.nxj" ]; then
-    echo "✓ NepoSimple.nxj ($(du -h NepoSimple.nxj | cut -f1))"
+if [ -f "target/NepoSimple.nxj" ]; then
+    echo "✓ target/NepoSimple.nxj ($(du -h target/NepoSimple.nxj | cut -f1))"
 else
-    echo "✗ NepoSimple.nxj not created"
+    echo "✗ target/NepoSimple.nxj not created"
     exit 1
 fi
 
-if [ -f "NepoDynamic.nxj" ]; then
-    echo "✓ NepoDynamic.nxj ($(du -h NepoDynamic.nxj | cut -f1))"
+if [ -f "target/NepoDynamic.nxj" ]; then
+    echo "✓ target/NepoDynamic.nxj ($(du -h target/NepoDynamic.nxj | cut -f1))"
 else
-    echo "✗ NepoDynamic.nxj not created"
+    echo "✗ target/NepoDynamic.nxj not created"
     exit 1
 fi
 
@@ -195,27 +208,27 @@ echo "BUILD SUCCESSFUL!"
 echo "=========================================="
 echo ""
 echo "Generated files:"
-echo "  NepoSimple.nxj  - Basic NEPO interpreter with file picker"
-echo "  NepoDynamic.nxj - Full dynamic program runner with crash logging"
+echo "  target/NepoSimple.nxj  - Basic NEPO interpreter with file picker"
+echo "  target/NepoDynamic.nxj - Full dynamic program runner with crash logging"
 
 if [ "$DEBUG_MODE" = true ]; then
-    echo "  NepoSimple.nxd  - Debug info for NepoSimple"
-    echo "  NepoDynamic.nxd - Debug info for NepoDynamic"
+    echo "  target/NepoSimple.nxd  - Debug info for NepoSimple"
+    echo "  target/NepoDynamic.nxd - Debug info for NepoDynamic"
 fi
 
 echo ""
 echo "To upload to NXT:"
-echo "  nxjupload NepoSimple.nxj"
-echo "  nxjupload NepoDynamic.nxj"
+echo "  nxjupload target/NepoSimple.nxj"
+echo "  nxjupload target/NepoDynamic.nxj"
 echo ""
 
 if [ "$DEBUG_MODE" = true ]; then
     echo "🐛 DEBUG MODE INSTRUCTIONS:"
     echo "1. Upload the .nxj files to NXT"
-    echo "2. Upload sample programs (if available)"
+    echo "2. Upload XML programs (any size - no artificial limits)"
     echo "3. Start remote console for debugging:"
-    echo "   nxjconsole -di NepoSimple.nxd    # For NepoSimple debugging"
-    echo "   nxjconsole -di NepoDynamic.nxd   # For NepoDynamic debugging"
+    echo "   nxjconsole -di target/NepoSimple.nxd    # For NepoSimple debugging"
+    echo "   nxjconsole -di target/NepoDynamic.nxd   # For NepoDynamic debugging"
     echo "4. Run the program on NXT"
     echo "5. View detailed debugging info on PC console"
     echo ""
@@ -223,6 +236,7 @@ if [ "$DEBUG_MODE" = true ]; then
     echo "  - Proper exception class names"
     echo "  - Method names with line numbers"
     echo "  - Real-time program output"
+    echo "  - OutOfMemoryError details if memory limits exceeded"
     echo ""
 fi
 

@@ -31,19 +31,35 @@ The interpreter consists of several key components:
 
 ```
 nepo-interpreter/
-├── src/
-│   └── NepoInterpreter.java     # Main interpreter class
-├── build.xml                    # Ant build script
-├── sample_nepo.xml             # Example NEPO program
-├── program.xml                 # Your NEPO program goes here
-├── NepoBlockTypes.md           # Documentation of supported blocks
-├── project-management/         # Project tracking and planning documents
-│   ├── DEVELOPMENT_PLAN.md     # Master project plan and status
-│   ├── BLOCK_TRACKER.json      # Detailed block implementation tracking
-│   ├── MILESTONES.md           # Time-based milestone tracking
-│   ├── BLOCK_IMPLEMENTATION_CHECKLIST.md  # Implementation guidelines
-│   ├── TESTING_FRAMEWORK_SPEC.md          # Test framework specification
-│   └── PROJECT_TRACKING_GUIDE.md          # How to use tracking system
+├── src/                        # All Java source files
+│   ├── NepoInterpreterMain.java    # Main interpreter entry point
+│   ├── DynamicNepoRunner.java      # Dynamic file picker runner
+│   ├── ShallowXMLParser.java       # Memory-optimized XML parser
+│   ├── ShallowString.java          # Memory-efficient string class
+│   ├── ShallowXMLElement.java      # Lazy XML element materialization
+│   ├── SimpleXMLParser.java        # Traditional XML parser (fallback)
+│   ├── NepoBlockExecutor.java      # NEPO block execution engine
+│   ├── FilePicker.java             # Dynamic file selection
+│   ├── CrashLogger.java            # Error handling and logging
+│   └── ...                         # Other core classes
+├── test/                       # Test framework and test cases
+│   ├── src/                    # Test source files
+│   ├── test-data/              # Test XML programs
+│   └── build/                  # Compiled test classes
+├── docs/                       # Documentation and guides
+│   ├── QUICK_START_GUIDE.md    # Getting started guide
+│   ├── DEPLOYMENT_GUIDE.md     # Deployment instructions
+│   ├── DYNAMIC_FILE_SELECTION.md  # File picker documentation
+│   ├── LEJOS_SETUP.md          # leJOS installation guide
+│   └── project-management/     # Project tracking documents
+├── build/                      # Compiled class files
+├── target/                     # Generated NXJ/NXD files
+├── examples/                   # Sample NEPO XML programs
+├── sample_programs/            # Additional test programs
+├── build.xml                   # Ant build script
+├── build.sh                    # Shell build script
+├── build_dynamic.sh            # Dynamic build script
+├── run_tests.sh                # Test runner
 └── README.md                   # This file
 ```
 
@@ -97,7 +113,7 @@ This project includes a complete dev container with leJOS NXJ pre-installed:
    ```
 
 ### Manual Setup
-See [LEJOS_SETUP.md](LEJOS_SETUP.md) for detailed installation instructions.
+See [docs/LEJOS_SETUP.md](docs/LEJOS_SETUP.md) for detailed installation instructions.
 
 ## Prerequisites
 
@@ -105,6 +121,86 @@ See [LEJOS_SETUP.md](LEJOS_SETUP.md) for detailed installation instructions.
 2. **Java 8 JDK** - Required for leJOS NXJ compatibility  
 3. **Open Roberta Lab** - For creating visual programs
 4. **USB connection** - For uploading to NXT (optional for development)
+
+## Documentation
+
+Comprehensive documentation is available in the `docs/` folder:
+
+- **[Quick Start Guide](docs/QUICK_START_GUIDE.md)** - Get up and running quickly
+- **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Production deployment instructions
+- **[leJOS Setup](docs/LEJOS_SETUP.md)** - Complete installation guide
+- **[Dynamic File Selection](docs/DYNAMIC_FILE_SELECTION.md)** - File picker documentation
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Debugging Guide](docs/DEBUGGING_GUIDE.md)** - Debug builds and remote console
+- **[XML Program Guide](docs/XML_PROGRAM_GUIDE.md)** - Creating NEPO programs
+- **[Block Types](docs/NepoBlockTypes.md)** - Supported NEPO blocks
+
+## Testing
+
+The project includes a comprehensive test framework:
+
+```bash
+./run_tests.sh                 # Run all tests
+./run_tests.sh -v              # Verbose output
+./run_tests.sh -c unit         # Unit tests only
+```
+
+Test results are generated in multiple formats:
+- `test/test-results.html` - Detailed HTML report
+- `test/test-results.json` - Machine-readable results
+- `test/test-results.txt` - Simple text summary
+
+## Memory Management for NXT
+
+### NXT Memory Constraints
+- **Total RAM**: 64KB (extremely limited!)
+- **ShallowXML Optimization**: 76% memory reduction vs traditional parsing
+- **No artificial limits**: Let the NXT handle memory naturally
+
+### Memory Optimization Features
+- **ShallowString approach** - Offset/length pointers instead of string copies
+- **Lazy object initialization** - Collections created only when needed
+- **Immediate cleanup** - Buffers released after use
+- **Single buffer parsing** - Eliminates recursive string copying
+
+### ShallowXML Benefits
+
+| Approach | 8KB XML Memory Usage | Efficiency |
+|----------|---------------------|------------|
+| **Traditional** | ~70KB (crashes) | Recursive copying |
+| **ShallowXML** | ~16KB (works!) | Single buffer + pointers |
+
+**Memory Strategy:**
+- ShallowString: 12 bytes vs full String copy (50-500+ bytes)
+- Lazy materialization: Parse attributes/children only when accessed
+- No hard limits: Try any file size, let OutOfMemoryError occur naturally if needed
+
+## Build Options
+
+Multiple build approaches are supported:
+
+### Shell Scripts (Recommended)
+```bash
+./build_dynamic.sh              # Production build (both NepoSimple.nxj and NepoDynamic.nxj)
+./build_dynamic.sh debug        # Debug build with remote console support
+./build.sh                      # Basic build (single program)
+./build.sh debug                # Basic debug build
+```
+
+### Ant Build System
+```bash
+ant deploy                      # Production build and upload
+ant debug                       # Debug build with remote console
+ant console                     # Start remote console (requires debug build)
+```
+
+### Generated Files (in `target/` directory)
+- **target/NepoSimple.nxj** - Basic NEPO interpreter with file picker
+- **target/NepoDynamic.nxj** - Full dynamic program runner with crash logging
+- **target/NepoSimple.nxd** - Debug info for NepoSimple (debug builds only)
+- **target/NepoDynamic.nxd** - Debug info for NepoDynamic (debug builds only)
+- **target/NepoInterpreter.nxj** - Single program build (build.sh)
+- **target/NepoInterpreter.nxd** - Debug info for single build (debug mode)
 
 ## Debugging and Error Handling
 
@@ -141,7 +237,22 @@ The interpreter now includes dynamic file selection capabilities:
 - **Multiple Programs** - Run different programs without recompiling
 - **Sample Programs** - Included XML examples for testing
 
-See [DYNAMIC_FILE_SELECTION.md](DYNAMIC_FILE_SELECTION.md) for complete documentation.
+See [docs/DYNAMIC_FILE_SELECTION.md](docs/DYNAMIC_FILE_SELECTION.md) for complete documentation.
+
+### ShallowXML Memory Optimization
+Revolutionary memory-efficient XML parsing for NXT's 64KB RAM constraint:
+
+- **76% Memory Reduction** - 8KB XML uses ~16KB memory (vs 70KB+ traditional)
+- **ShallowString** - 12-byte pointers instead of full string copies
+- **Lazy Materialization** - Parse attributes/children only when accessed
+- **No Size Limits** - Handles any XML file size, fails gracefully on OutOfMemoryError
+- **Single Buffer** - Eliminates recursive string copying during parsing
+
+**Memory Comparison:**
+| Approach | 8KB XML Memory Usage | Result |
+|----------|---------------------|--------|
+| **Traditional** | ~70KB | OutOfMemoryError crash |
+| **ShallowXML** | ~16KB | Successful parsing |
 
 ## Setup Instructions
 

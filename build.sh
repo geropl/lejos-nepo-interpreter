@@ -42,12 +42,15 @@ echo "📁 Found $SRC_COUNT Java source files"
 
 # Clean previous build
 echo "🧹 Cleaning previous build..."
-rm -rf build
-mkdir -p build
+rm -rf build target
+mkdir -p build target
 
 # Compile Java sources
 echo "🔨 Compiling Java sources..."
-nxjc -cp src -d build src/*.java
+echo "  → Compiling ShallowString components..."
+nxjc -d build src/ShallowString.java src/ShallowXMLElement.java src/ShallowXMLParser.java
+echo "  → Compiling remaining sources..."
+nxjc -cp build -d build src/*.java
 
 if [ $? -ne 0 ]; then
     echo "❌ Compilation failed!"
@@ -67,18 +70,18 @@ cd build
 
 if [ "$DEBUG_MODE" = true ]; then
     echo "🐛 Creating DEBUG build with remote console support..."
-    nxjlink -o NepoInterpreter.nxj -od NepoInterpreter.nxd -g -gr -cp . NepoInterpreterMain
+    nxjlink -o ../target/NepoInterpreter.nxj -od ../target/NepoInterpreter.nxd -g -gr -cp . NepoInterpreterMain
     
     if [ $? -ne 0 ]; then
         echo "❌ Debug linking failed!"
         exit 1
     fi
     
-    echo "✅ Debug build created with debug info: build/NepoInterpreter.nxd"
-    echo "🔍 Use 'nxjconsole -di build/NepoInterpreter.nxd' for remote debugging"
+    echo "✅ Debug build created with debug info: target/NepoInterpreter.nxd"
+    echo "🔍 Use 'nxjconsole -di target/NepoInterpreter.nxd' for remote debugging"
 else
     echo "🏭 Creating PRODUCTION build..."
-    nxjlink -o NepoInterpreter.nxj -cp . NepoInterpreterMain
+    nxjlink -o ../target/NepoInterpreter.nxj -cp . NepoInterpreterMain
     
     if [ $? -ne 0 ]; then
         echo "❌ Production linking failed!"
@@ -89,10 +92,10 @@ else
 fi
 
 cd ..
-echo "✅ NXJ binary created: build/NepoInterpreter.nxj"
+echo "✅ NXJ binary created: target/NepoInterpreter.nxj"
 
 # Check NXJ binary
-NXJ_SIZE=$(du -h build/NepoInterpreter.nxj | cut -f1)
+NXJ_SIZE=$(du -h target/NepoInterpreter.nxj | cut -f1)
 echo "📊 NXJ binary size: $NXJ_SIZE"
 
 # Verify main class exists
@@ -110,16 +113,16 @@ ls -1 build/*.class | sed 's/build\///g' | sed 's/\.class//g' | sort
 
 echo ""
 echo "🎉 Build completed successfully!"
-echo "📁 Output: build/NepoInterpreter.nxj"
+echo "📁 Output: target/NepoInterpreter.nxj"
 
 if [ "$DEBUG_MODE" = true ]; then
-    echo "🐛 Debug info: build/NepoInterpreter.nxd"
+    echo "🐛 Debug info: target/NepoInterpreter.nxd"
     echo ""
     echo "Debug deployment steps:"
     echo "1. Connect your NXT via USB"
-    echo "2. Upload binary: nxjupload build/NepoInterpreter.nxj"
+    echo "2. Upload binary: nxjupload target/NepoInterpreter.nxj"
     echo "3. Upload XML program: nxjupload test_program.xml"
-    echo "4. Start remote console: nxjconsole -di build/NepoInterpreter.nxd"
+    echo "4. Start remote console: nxjconsole -di target/NepoInterpreter.nxd"
     echo "5. Run program on NXT: Files → NepoInterpreter"
     echo ""
     echo "🔍 Remote console will show proper exception names and line numbers!"
@@ -127,7 +130,7 @@ else
     echo ""
     echo "Production deployment steps:"
     echo "1. Connect your NXT via USB"
-    echo "2. Upload binary: nxjupload build/NepoInterpreter.nxj"
+    echo "2. Upload binary: nxjupload target/NepoInterpreter.nxj"
     echo "3. Upload XML program: nxjupload test_program.xml"
     echo "4. Run on NXT: Files → NepoInterpreter"
 fi
