@@ -3,7 +3,7 @@
     
     <description>
         NEPO XML Interpreter for leJOS NXT
-        Compiles and uploads NEPO interpreter to NXT brick
+        Single entry point: DynamicNepoRunner with file selection and crash logging
         
         Usage:
           ant deploy        - Production build and upload
@@ -67,7 +67,7 @@
     <target name="jar" depends="compile">
         <jar destfile="${jar.file}" basedir="${build.dir}">
             <manifest>
-                <attribute name="Main-Class" value="NepoInterpreter"/>
+                <attribute name="Main-Class" value="DynamicNepoRunner"/>
             </manifest>
         </jar>
     </target>
@@ -80,7 +80,7 @@
             <arg value="${target.dir}/NepoInterpreter.nxj"/>
             <arg value="-cp"/>
             <arg value="${build.dir}"/>
-            <arg value="NepoInterpreterMain"/>
+            <arg value="DynamicNepoRunner"/>
         </java>
     </target>
 
@@ -97,7 +97,7 @@
             <arg value="-gr"/>
             <arg value="-cp"/>
             <arg value="${build.dir}"/>
-            <arg value="NepoInterpreterMain"/>
+            <arg value="DynamicNepoRunner"/>
         </java>
         <echo message="Debug info written to: ${debug.file}"/>
         <echo message="Use 'nxjconsole -di ${debug.file}' for remote debugging"/>

@@ -32,8 +32,7 @@ The interpreter consists of several key components:
 ```
 nepo-interpreter/
 ├── src/                        # All Java source files
-│   ├── NepoInterpreterMain.java    # Main interpreter entry point
-│   ├── DynamicNepoRunner.java      # Dynamic file picker runner
+│   ├── DynamicNepoRunner.java      # Main entry point with file picker
 │   ├── ShallowXMLParser.java       # Memory-optimized XML parser
 │   ├── ShallowString.java          # Memory-efficient string class
 │   ├── ShallowXMLElement.java      # Lazy XML element materialization
@@ -58,7 +57,6 @@ nepo-interpreter/
 ├── sample_programs/            # Additional test programs
 ├── build.xml                   # Ant build script
 ├── build.sh                    # Shell build script
-├── build_dynamic.sh            # Dynamic build script
 ├── run_tests.sh                # Test runner
 └── README.md                   # This file
 ```
@@ -107,8 +105,8 @@ This project includes a complete dev container with leJOS NXJ pre-installed:
 2. Container will automatically install leJOS NXJ tools
 3. Build and test:
    ```bash
-   ./build_dynamic.sh           # Production build
-   ./build_dynamic.sh debug     # Debug build with remote console
+   ./build.sh                   # Production build
+   ./build.sh debug             # Debug build with remote console
    ./run_tests.sh               # Run all tests
    ```
 
@@ -179,12 +177,10 @@ Test results are generated in multiple formats:
 
 Multiple build approaches are supported:
 
-### Shell Scripts (Recommended)
+### Shell Script (Recommended)
 ```bash
-./build_dynamic.sh              # Production build (both NepoSimple.nxj and NepoDynamic.nxj)
-./build_dynamic.sh debug        # Debug build with remote console support
-./build.sh                      # Basic build (single program)
-./build.sh debug                # Basic debug build
+./build.sh                      # Production build
+./build.sh debug                # Debug build with remote console support
 ```
 
 ### Ant Build System
@@ -195,12 +191,8 @@ ant console                     # Start remote console (requires debug build)
 ```
 
 ### Generated Files (in `target/` directory)
-- **target/NepoSimple.nxj** - Basic NEPO interpreter with file picker
-- **target/NepoDynamic.nxj** - Full dynamic program runner with crash logging
-- **target/NepoSimple.nxd** - Debug info for NepoSimple (debug builds only)
-- **target/NepoDynamic.nxd** - Debug info for NepoDynamic (debug builds only)
-- **target/NepoInterpreter.nxj** - Single program build (build.sh)
-- **target/NepoInterpreter.nxd** - Debug info for single build (debug mode)
+- **target/NepoInterpreter.nxj** - NEPO interpreter with dynamic file selection and crash logging
+- **target/NepoInterpreter.nxd** - Debug info for remote console (debug builds only)
 
 ## Debugging and Error Handling
 

@@ -112,27 +112,24 @@ sample_programs/
 
 **Production Build:**
 ```bash
-./build_dynamic.sh
+./build.sh
 ```
 
 **Debug Build:**
 ```bash
-./build_dynamic.sh debug
+./build.sh debug
 ```
 
 This creates:
-- `NepoSimple.nxj` - Basic interpreter with file picker
-- `NepoDynamic.nxj` - Full dynamic runner
-- `NepoSimple.nxd` - Debug info (debug build only)
-- `NepoDynamic.nxd` - Debug info (debug build only)
+- `target/NepoInterpreter.nxj` - NEPO interpreter with dynamic file selection
+- `target/NepoInterpreter.nxd` - Debug info (debug build only)
 
 ### Upload to NXT
 
 **Production Deployment:**
 ```bash
-# Upload programs
-nxjupload target/NepoSimple.nxj
-nxjupload target/NepoDynamic.nxj
+# Upload program
+nxjupload target/NepoInterpreter.nxj
 
 # Upload sample programs
 nxjupload sample_programs/*.xml
@@ -140,16 +137,14 @@ nxjupload sample_programs/*.xml
 
 **Debug Deployment:**
 ```bash
-# Upload programs
-nxjupload target/NepoSimple.nxj
-nxjupload target/NepoDynamic.nxj
+# Upload program
+nxjupload target/NepoInterpreter.nxj
 
 # Upload sample programs
 nxjupload sample_programs/*.xml
 
 # Start remote console for debugging
-nxjconsole -di target/NepoSimple.nxd    # For NepoSimple debugging
-nxjconsole -di target/NepoDynamic.nxd   # For NepoDynamic debugging
+nxjconsole -di target/NepoInterpreter.nxd
 ```
 
 ### Debug Mode Benefits

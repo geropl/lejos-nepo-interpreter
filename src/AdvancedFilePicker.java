@@ -317,33 +317,4 @@ public class AdvancedFilePicker {
         LCD.refresh();
     }
     
-    /**
-     * Test method
-     */
-    public static void main(String[] args) {
-        LCD.drawString("Advanced File", 0, 0);
-        LCD.drawString("Picker Demo", 0, 1);
-        LCD.refresh();
-        Button.waitForAnyPress();
-        
-        String selectedFile = selectXmlFile();
-        
-        if (selectedFile != null) {
-            LCD.clear();
-            LCD.drawString("Selected:", 0, 1);
-            LCD.drawString(selectedFile, 0, 2);
-            LCD.drawString("", 0, 3);
-            LCD.drawString("ENTER: Info", 0, 4);
-            LCD.drawString("ESC: Exit", 0, 5);
-            LCD.refresh();
-            
-            int button = Button.waitForAnyPress();
-            if (button == Button.ID_ENTER) {
-                showFileInfo(selectedFile);
-            }
-        } else {
-            showMessage("No file selected", "Press any key");
-            Button.waitForAnyPress();
-        }
-    }
 }
