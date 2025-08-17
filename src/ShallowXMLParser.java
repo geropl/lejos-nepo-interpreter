@@ -137,24 +137,4 @@ public class ShallowXMLParser {
         return "unknown";
     }
     
-    /**
-     * Compatibility adapter: convert ShallowXMLElement to SimpleXMLParser.XMLElement
-     * Use only when interfacing with existing code that expects XMLElement
-     */
-    public static SimpleXMLParser.XMLElement toXMLElement(ShallowXMLElement shallow) {
-        if (shallow == null) return null;
-        
-        SimpleXMLParser.XMLElement element = new SimpleXMLParser.XMLElement(shallow.getTagName());
-        
-        // Copy text content
-        String textContent = shallow.getTextContent();
-        if (textContent != null && textContent.length() > 0) {
-            element.textContent = textContent;
-        }
-        
-        // Note: Attributes and children would need to be materialized here
-        // This is expensive and should be avoided when possible
-        
-        return element;
-    }
 }

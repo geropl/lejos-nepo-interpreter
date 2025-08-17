@@ -11,7 +11,7 @@ public class ConfigurationBlockExecutor {
     /**
      * Parse configuration from XML and build RobotConfiguration
      */
-    public RobotConfiguration parseConfiguration(SimpleXMLParser.XMLElement configRoot) {
+    public RobotConfiguration parseConfiguration(ShallowXMLElement configRoot) {
         RobotConfiguration config = new RobotConfiguration();
         
         if (configRoot == null) {
@@ -28,10 +28,12 @@ public class ConfigurationBlockExecutor {
     /**
      * Execute a configuration block
      */
-    private void executeConfigBlock(SimpleXMLParser.XMLElement block, RobotConfiguration config) {
-        String blockType = block.getAttribute("type");
-        if (blockType == null) return;
+    private void executeConfigBlock(ShallowXMLElement block, RobotConfiguration config) {
+        ShallowString blockTypeAttr = block.getAttribute("type");
+        if (blockTypeAttr == null) return;
         
+        String blockType = blockTypeAttr.toString();
+
         if ("robBrick_EV3-Brick".equals(blockType)) {
             executeMainBrickBlock(block, config);
         } else if ("robBrick_motor_big".equals(blockType)) {
@@ -53,19 +55,20 @@ public class ConfigurationBlockExecutor {
         }
         
         // Process child blocks
-        Vector children = block.children;
+        Vector<ShallowXMLElement> children = block.getAllChildren();
         for (int i = 0; i < children.size(); i++) {
-            SimpleXMLParser.XMLElement child = (SimpleXMLParser.XMLElement) children.elementAt(i);
-            if ("statement".equals(child.tagName) && "ST".equals(child.getAttribute("name"))) {
+            ShallowXMLElement child = children.elementAt(i);
+            ShallowString nameAttr = child.getAttribute("name");
+            if ("statement".equals(child.getTagName()) && nameAttr != null && "ST".equals(nameAttr.toString())) {
                 // Process statement children
-                Vector statementChildren = child.children;
+                Vector<ShallowXMLElement> statementChildren = child.getAllChildren();
                 for (int j = 0; j < statementChildren.size(); j++) {
-                    SimpleXMLParser.XMLElement statementChild = (SimpleXMLParser.XMLElement) statementChildren.elementAt(j);
-                    if ("block".equals(statementChild.tagName)) {
+                    ShallowXMLElement statementChild = statementChildren.elementAt(j);
+                    if ("block".equals(statementChild.getTagName())) {
                         executeConfigBlock(statementChild, config);
                     }
                 }
-            } else if ("block".equals(child.tagName)) {
+            } else if ("block".equals(child.getTagName())) {
                 executeConfigBlock(child, config);
             }
         }
@@ -74,7 +77,7 @@ public class ConfigurationBlockExecutor {
     /**
      * Execute main brick configuration block
      */
-    private void executeMainBrickBlock(SimpleXMLParser.XMLElement block, RobotConfiguration config) {
+    private void executeMainBrickBlock(ShallowXMLElement block, RobotConfiguration config) {
         // Parse wheel diameter
         String wheelDiameter = getFieldValue(block, "WHEEL_DIAMETER");
         if (wheelDiameter != null) {
@@ -99,7 +102,7 @@ public class ConfigurationBlockExecutor {
     /**
      * Execute motor configuration block
      */
-    private void executeMotorBlock(SimpleXMLParser.XMLElement block, RobotConfiguration config) {
+    private void executeMotorBlock(ShallowXMLElement block, RobotConfiguration config) {
         String motorPort = getFieldValue(block, "MOTORPORT");
         if (motorPort != null) {
             RobotConfiguration.MotorConfig motorConfig = new RobotConfiguration.MotorConfig(motorPort);
@@ -129,7 +132,7 @@ public class ConfigurationBlockExecutor {
     /**
      * Execute sensor configuration block
      */
-    private void executeSensorBlock(SimpleXMLParser.XMLElement block, RobotConfiguration config, String sensorType) {
+    private void executeSensorBlock(ShallowXMLElement block, RobotConfiguration config, String sensorType) {
         String sensorPort = getFieldValue(block, "SENSORPORT");
         if (sensorPort != null) {
             RobotConfiguration.SensorConfig sensorConfig = new RobotConfiguration.SensorConfig(sensorPort, sensorType);
@@ -140,17 +143,18 @@ public class ConfigurationBlockExecutor {
     /**
      * Get field value from a block
      */
-    private String getFieldValue(SimpleXMLParser.XMLElement block, String fieldName) {
-        Vector fields = block.getChildren("field");
+    private String getFieldValue(ShallowXMLElement block, String fieldName) {
+        Vector<ShallowXMLElement> fields = block.getChildren("field");
         for (int i = 0; i < fields.size(); i++) {
-            SimpleXMLParser.XMLElement field = (SimpleXMLParser.XMLElement) fields.elementAt(i);
-            if (fieldName.equals(field.getAttribute("name"))) {
-                return field.textContent;
+            ShallowXMLElement field = fields.elementAt(i);
+            ShallowString nameAttr = field.getAttribute("name");
+            if (nameAttr != null && fieldName.equals(nameAttr.toString())) {
+                return field.getTextContent();
             }
         }
         return null;
     }
-    
+
     /**
      * Create default configuration for NXT
      */

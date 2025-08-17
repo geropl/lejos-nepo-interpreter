@@ -73,7 +73,6 @@ echo "✓ Build directory created"
 echo ""
 echo "Checking source files..."
 REQUIRED_FILES=(
-    "src/SimpleXMLParser.java"
     "src/ShallowString.java"
     "src/ShallowXMLElement.java"
     "src/ShallowXMLParser.java"
@@ -104,10 +103,6 @@ echo ""
 echo "Compiling core components..."
 
 # Compile in dependency order with error checking
-echo "  → SimpleXMLParser.java"
-nxjc -cp .:build -d build src/SimpleXMLParser.java || { echo "ERROR: Failed to compile SimpleXMLParser.java"; exit 1; }
-
-# Compile shallow XML components (depends on SimpleXMLParser)
 echo "  → ShallowString.java"
 nxjc -cp .:build -d build src/ShallowString.java || { echo "ERROR: Failed to compile ShallowString.java"; exit 1; }
 

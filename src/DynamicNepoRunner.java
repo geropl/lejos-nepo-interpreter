@@ -1,3 +1,4 @@
+import java.util.Vector;
 import lejos.nxt.*;
 import lejos.util.Delay;
 
@@ -84,8 +85,8 @@ public class DynamicNepoRunner {
         LCD.drawString("Loading...", 0, 3);
         LCD.refresh();
         
-        // Parse the XML program
-        SimpleXMLParser.XMLElement root = SimpleXMLParser.parseFile(filename);
+        // Parse the XML program using ShallowXMLParser
+        ShallowXMLElement root = ShallowXMLParser.parseFile(filename);
         if (root == null) {
             showError("Failed to parse XML file");
             return;
@@ -96,12 +97,12 @@ public class DynamicNepoRunner {
         Delay.msDelay(1000);
         
         // Find the start block
-        SimpleXMLParser.XMLElement startBlock = findStartBlock(root);
+        ShallowXMLElement startBlock = findStartBlock(root);
         if (startBlock == null) {
             showError("No start block found in program");
             return;
         }
-        
+
         LCD.drawString("Start block found", 0, 5);
         LCD.refresh();
         Delay.msDelay(1000);
@@ -130,13 +131,16 @@ public class DynamicNepoRunner {
     /**
      * Find the start block in the XML structure
      */
-    private static SimpleXMLParser.XMLElement findStartBlock(SimpleXMLParser.XMLElement root) {
+    private static ShallowXMLElement findStartBlock(ShallowXMLElement root) {
         // Look for blockSet -> instance -> block with type="robControls_start"
-        SimpleXMLParser.XMLElement instance = root.getChild("instance");
+        ShallowXMLElement instance = root.getChild("instance");
         if (instance != null) {
-            SimpleXMLParser.XMLElement block = instance.getChild("block");
-            if (block != null && "robControls_start".equals(block.getAttribute("type"))) {
-                return block;
+            ShallowXMLElement block = instance.getChild("block");
+            if (block != null) {
+                ShallowString typeAttr = block.getAttribute("type");
+                if (typeAttr != null && "robControls_start".equals(typeAttr.toString())) {
+                    return block;
+                }
             }
         }
         
@@ -147,14 +151,18 @@ public class DynamicNepoRunner {
     /**
      * Recursively find a block by type
      */
-    private static SimpleXMLParser.XMLElement findBlockByType(SimpleXMLParser.XMLElement element, String blockType) {
-        if ("block".equals(element.tagName) && blockType.equals(element.getAttribute("type"))) {
-            return element;
+    private static ShallowXMLElement findBlockByType(ShallowXMLElement element, String blockType) {
+        if ("block".equals(element.getTagName())) {
+            ShallowString typeAttr = element.getAttribute("type");
+            if (typeAttr != null && blockType.equals(typeAttr.toString())) {
+                return element;
+            }
         }
         
-        for (int i = 0; i < element.children.size(); i++) {
-            SimpleXMLParser.XMLElement child = (SimpleXMLParser.XMLElement) element.children.elementAt(i);
-            SimpleXMLParser.XMLElement result = findBlockByType(child, blockType);
+        Vector<ShallowXMLElement> children = element.getAllChildren();
+        for (int i = 0; i < children.size(); i++) {
+            ShallowXMLElement child = children.elementAt(i);
+            ShallowXMLElement result = findBlockByType(child, blockType);
             if (result != null) {
                 return result;
             }
@@ -162,7 +170,7 @@ public class DynamicNepoRunner {
         
         return null;
     }
-    
+
     /**
      * Ask if user wants to run another program
      */

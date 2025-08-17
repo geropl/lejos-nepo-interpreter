@@ -92,7 +92,7 @@ public class ShallowXMLElement {
         Vector<ShallowXMLElement> result = new Vector<ShallowXMLElement>();
         if (children != null) {
             for (int i = 0; i < children.size(); i++) {
-                ShallowXMLElement child = (ShallowXMLElement) children.elementAt(i);
+                ShallowXMLElement child = children.elementAt(i);
                 if (tagName.equals(child.getTagName())) {
                     result.addElement(child);
                 }
@@ -101,6 +101,24 @@ public class ShallowXMLElement {
         return result;
     }
     
+    /**
+     * Get all children (regardless of tag name)
+     */
+    public Vector<ShallowXMLElement> getAllChildren() {
+        if (!childrenParsed) {
+            parseChildren();
+        }
+        
+        if (children != null) {
+            Vector<ShallowXMLElement> result = new Vector<ShallowXMLElement>();
+            for (int i = 0; i < children.size(); i++) {
+                result.addElement(children.elementAt(i));
+            }
+            return result;
+        }
+        return new Vector<ShallowXMLElement>();
+    }
+
     /**
      * Get text content - lazy extraction
      */

@@ -27,7 +27,7 @@ public class NepoBlockExecutor {
     /**
      * Set robot configuration from XML config section
      */
-    public void setConfiguration(SimpleXMLParser.XMLElement configElement) {
+    public void setConfiguration(ShallowXMLElement configElement) {
         robotConfig = configExecutor.parseConfiguration(configElement);
     }
     
@@ -41,12 +41,14 @@ public class NepoBlockExecutor {
     /**
      * Execute a block based on its type and parameters
      */
-    public void executeBlock(SimpleXMLParser.XMLElement block) {
+    public void executeBlock(ShallowXMLElement block) {
         if (!running) return;
         
-        String blockType = block.getAttribute("type");
-        if (blockType == null) return;
+        ShallowString blockTypeAttr = block.getAttribute("type");
+        if (blockTypeAttr == null) return;
         
+        String blockType = blockTypeAttr.toString();
+
         try {
             if ("robControls_start".equals(blockType)) {
                 executeStartBlock(block);
@@ -77,11 +79,11 @@ public class NepoBlockExecutor {
             }
             
             // Execute next block in sequence
-            SimpleXMLParser.XMLElement nextBlock = getNextBlock(block);
+            ShallowXMLElement nextBlock = getNextBlock(block);
             if (nextBlock != null) {
                 executeBlock(nextBlock);
             }
-            
+
         } catch (Exception e) {
             LCD.clear();
             LCD.drawString("Error in block:", 0, 0);
@@ -95,8 +97,8 @@ public class NepoBlockExecutor {
     /**
      * Execute start block - find and execute statement blocks
      */
-    private void executeStartBlock(SimpleXMLParser.XMLElement block) {
-        SimpleXMLParser.XMLElement statement = getStatementBlock(block, "ST");
+    private void executeStartBlock(ShallowXMLElement block) {
+        ShallowXMLElement statement = getStatementBlock(block, "ST");
         if (statement != null) {
             executeBlock(statement);
         }
@@ -105,7 +107,7 @@ public class NepoBlockExecutor {
     /**
      * Execute display text block
      */
-    private void executeDisplayTextBlock(SimpleXMLParser.XMLElement block) {
+    private void executeDisplayTextBlock(ShallowXMLElement block) {
         Object textValue = getValue(block, "OUT");
         if (textValue != null) {
             LCD.clear();
@@ -117,7 +119,7 @@ public class NepoBlockExecutor {
     /**
      * Execute motor on block
      */
-    private void executeMotorOnBlock(SimpleXMLParser.XMLElement block) {
+    private void executeMotorOnBlock(ShallowXMLElement block) {
         String motorPort = getFieldValue(block, "MOTORPORT");
         String rotationType = getFieldValue(block, "MOTORROTATION");
         
@@ -154,7 +156,7 @@ public class NepoBlockExecutor {
     /**
      * Execute motor stop block
      */
-    private void executeMotorStopBlock(SimpleXMLParser.XMLElement block) {
+    private void executeMotorStopBlock(ShallowXMLElement block) {
         String motorPort = getFieldValue(block, "MOTORPORT");
         if (motorPort != null) {
             NXTRegulatedMotor motor = getMotor(motorPort);
@@ -167,7 +169,7 @@ public class NepoBlockExecutor {
     /**
      * Execute wait time block
      */
-    private void executeWaitTimeBlock(SimpleXMLParser.XMLElement block) {
+    private void executeWaitTimeBlock(ShallowXMLElement block) {
         Object waitValue = getValue(block, "WAIT");
         if (waitValue instanceof Double) {
             int milliseconds = ((Double) waitValue).intValue();
@@ -178,10 +180,10 @@ public class NepoBlockExecutor {
     /**
      * Execute if block
      */
-    private void executeIfBlock(SimpleXMLParser.XMLElement block) {
+    private void executeIfBlock(ShallowXMLElement block) {
         Object conditionValue = getValue(block, "IF0");
         if (conditionValue instanceof Boolean && ((Boolean) conditionValue).booleanValue()) {
-            SimpleXMLParser.XMLElement doBlock = getStatementBlock(block, "DO0");
+            ShallowXMLElement doBlock = getStatementBlock(block, "DO0");
             if (doBlock != null) {
                 executeBlock(doBlock);
             }
@@ -191,17 +193,17 @@ public class NepoBlockExecutor {
     /**
      * Execute if-else block
      */
-    private void executeIfElseBlock(SimpleXMLParser.XMLElement block) {
+    private void executeIfElseBlock(ShallowXMLElement block) {
         Object conditionValue = getValue(block, "IF0");
         if (conditionValue instanceof Boolean && ((Boolean) conditionValue).booleanValue()) {
             // Execute IF branch
-            SimpleXMLParser.XMLElement doBlock = getStatementBlock(block, "DO0");
+            ShallowXMLElement doBlock = getStatementBlock(block, "DO0");
             if (doBlock != null) {
                 executeBlock(doBlock);
             }
         } else {
             // Execute ELSE branch
-            SimpleXMLParser.XMLElement elseBlock = getStatementBlock(block, "ELSE");
+            ShallowXMLElement elseBlock = getStatementBlock(block, "ELSE");
             if (elseBlock != null) {
                 executeBlock(elseBlock);
             }
@@ -211,12 +213,12 @@ public class NepoBlockExecutor {
     /**
      * Execute repeat times block
      */
-    private void executeRepeatTimesBlock(SimpleXMLParser.XMLElement block) {
+    private void executeRepeatTimesBlock(ShallowXMLElement block) {
         Object timesValue = getValue(block, "TIMES");
         if (timesValue instanceof Double) {
             int times = ((Double) timesValue).intValue();
-            SimpleXMLParser.XMLElement doBlock = getStatementBlock(block, "DO");
-            
+            ShallowXMLElement doBlock = getStatementBlock(block, "DO");
+
             for (int i = 0; i < times && running; i++) {
                 if (doBlock != null) {
                     executeBlock(doBlock);
@@ -228,7 +230,7 @@ public class NepoBlockExecutor {
     /**
      * Execute play tone block
      */
-    private void executePlayToneBlock(SimpleXMLParser.XMLElement block) {
+    private void executePlayToneBlock(ShallowXMLElement block) {
         Object frequencyValue = getValue(block, "FREQUENCY");
         Object durationValue = getValue(block, "DURATION");
         
@@ -243,12 +245,13 @@ public class NepoBlockExecutor {
     /**
      * Get value from a value block
      */
-    private Object getValue(SimpleXMLParser.XMLElement parentBlock, String valueName) {
+    private Object getValue(ShallowXMLElement parentBlock, String valueName) {
         Vector values = parentBlock.getChildren("value");
         for (int i = 0; i < values.size(); i++) {
-            SimpleXMLParser.XMLElement value = (SimpleXMLParser.XMLElement) values.elementAt(i);
-            if (valueName.equals(value.getAttribute("name"))) {
-                SimpleXMLParser.XMLElement valueBlock = value.getChild("block");
+            ShallowXMLElement value = (ShallowXMLElement) values.elementAt(i);
+            ShallowString nameAttr = value.getAttribute("name");
+            if (nameAttr != null && valueName.equals(nameAttr.toString())) {
+                ShallowXMLElement valueBlock = value.getChild("block");
                 if (valueBlock != null) {
                     return evaluateValueBlock(valueBlock);
                 }
@@ -260,9 +263,12 @@ public class NepoBlockExecutor {
     /**
      * Evaluate a value block and return its result
      */
-    private Object evaluateValueBlock(SimpleXMLParser.XMLElement block) {
-        String blockType = block.getAttribute("type");
+    private Object evaluateValueBlock(ShallowXMLElement block) {
+        ShallowString blockTypeAttr = block.getAttribute("type");
+        if (blockTypeAttr == null) return null;
         
+        String blockType = blockTypeAttr.toString();
+
         if ("math_number".equals(blockType)) {
             String numText = getFieldValue(block, "NUM");
             if (numText != null) {
@@ -311,7 +317,7 @@ public class NepoBlockExecutor {
             if (condition instanceof Boolean) {
                 while (((Boolean) condition).booleanValue()) {
                     // Execute statements in the loop
-                    SimpleXMLParser.XMLElement statements = getStatementBlock(block, "DO");
+                    ShallowXMLElement statements = getStatementBlock(block, "DO");
                     if (statements != null) {
                         executeBlock(statements);
                     }
@@ -326,7 +332,7 @@ public class NepoBlockExecutor {
             int maxIterations = 10000; // Safety limit
             int iterations = 0;
             while (iterations < maxIterations) {
-                SimpleXMLParser.XMLElement statements = getStatementBlock(block, "DO");
+                ShallowXMLElement statements = getStatementBlock(block, "DO");
                 if (statements != null) {
                     executeBlock(statements);
                 }
@@ -604,12 +610,13 @@ public class NepoBlockExecutor {
     /**
      * Get field value from a block
      */
-    private String getFieldValue(SimpleXMLParser.XMLElement block, String fieldName) {
+    private String getFieldValue(ShallowXMLElement block, String fieldName) {
         Vector fields = block.getChildren("field");
         for (int i = 0; i < fields.size(); i++) {
-            SimpleXMLParser.XMLElement field = (SimpleXMLParser.XMLElement) fields.elementAt(i);
-            if (fieldName.equals(field.getAttribute("name"))) {
-                return field.textContent;
+            ShallowXMLElement field = (ShallowXMLElement) fields.elementAt(i);
+            ShallowString nameAttr = field.getAttribute("name");
+            if (nameAttr != null && fieldName.equals(nameAttr.toString())) {
+                return field.getTextContent();
             }
         }
         return null;
@@ -618,11 +625,12 @@ public class NepoBlockExecutor {
     /**
      * Get statement block by name
      */
-    private SimpleXMLParser.XMLElement getStatementBlock(SimpleXMLParser.XMLElement parentBlock, String statementName) {
+    private ShallowXMLElement getStatementBlock(ShallowXMLElement parentBlock, String statementName) {
         Vector statements = parentBlock.getChildren("statement");
         for (int i = 0; i < statements.size(); i++) {
-            SimpleXMLParser.XMLElement statement = (SimpleXMLParser.XMLElement) statements.elementAt(i);
-            if (statementName.equals(statement.getAttribute("name"))) {
+            ShallowXMLElement statement = (ShallowXMLElement) statements.elementAt(i);
+            ShallowString nameAttr = statement.getAttribute("name");
+            if (nameAttr != null && statementName.equals(nameAttr.toString())) {
                 return statement.getChild("block");
             }
         }
@@ -632,8 +640,8 @@ public class NepoBlockExecutor {
     /**
      * Get next block in sequence
      */
-    private SimpleXMLParser.XMLElement getNextBlock(SimpleXMLParser.XMLElement currentBlock) {
-        SimpleXMLParser.XMLElement nextElement = currentBlock.getChild("next");
+    private ShallowXMLElement getNextBlock(ShallowXMLElement currentBlock) {
+        ShallowXMLElement nextElement = currentBlock.getChild("next");
         if (nextElement != null) {
             return nextElement.getChild("block");
         }
