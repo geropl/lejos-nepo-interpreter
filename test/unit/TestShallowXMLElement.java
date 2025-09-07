@@ -1,7 +1,7 @@
 /**
  * Test to verify the centralized utility methods in ShallowXMLElement work correctly
  */
-public class ShallowXMLElementTest {
+public class TestShallowXMLElement {
     public static void main(String[] args) {
         System.out.println("=== Testing ShallowXMLElement Utility Methods ===\n");
         

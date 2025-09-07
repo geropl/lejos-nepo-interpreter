@@ -6,7 +6,7 @@ import java.util.*;
  * Tests XML parsing capabilities by comparing input XML strings
  * to expected output representations.
  */
-public class XMLParserTest {
+public class TestXMLParser {
     
     /**
      * Test case structure for table-driven testing

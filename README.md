@@ -138,18 +138,47 @@ Comprehensive documentation is available in the `docs/` folder:
 
 ## Testing
 
-The project includes a comprehensive test framework:
+The project follows a structured testing approach with clear organization and naming conventions.
 
-```bash
-./run_tests.sh                 # Run all tests
-./run_tests.sh -v              # Verbose output
-./run_tests.sh -c unit         # Unit tests only
+### Test Organization Guidelines
+
+**All test classes follow the `Test...` naming convention:**
+- ✅ `TestXMLParser.java` - Correct naming
+- ❌ `XMLParserTest.java` - Incorrect naming
+
+**Test directory structure:**
+```
+test/
+├── unit/                    # Unit tests (Test*.java)
+├── integration/             # Integration tests (Test*.java)
+├── build/                   # Compiled test classes
 ```
 
-Test results are generated in multiple formats:
-- `test/test-results.html` - Detailed HTML report
-- `test/test-results.json` - Machine-readable results
-- `test/test-results.txt` - Simple text summary
+### Running Tests
+
+```bash
+# Run all tests
+./run_tests.sh
+
+# Run with options
+./run_tests.sh --help        # Show all options
+./run_tests.sh -v            # Verbose output
+./run_tests.sh -u            # Unit tests only
+./run_tests.sh -i            # Integration tests only
+./run_tests.sh --clean       # Clean build artifacts first
+```
+
+### Test Types
+
+**Unit Tests (`test/unit/`):**
+- `TestXMLParser.java` - XML parsing functionality
+- `TestShallowXMLElement.java` - XML element utility methods
+- `TestFramework.java` - Test framework components
+
+**Integration Tests (`test/integration/`):**
+- End-to-end program execution tests (against MockHardware)
+- Hardware interaction tests (against MockHardware)
+
 
 ## Memory Management for NXT
 
