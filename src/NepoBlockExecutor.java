@@ -1,5 +1,3 @@
-import lejos.nxt.*;
-import lejos.util.Delay;
 import java.util.*;
 
 /**
@@ -15,15 +13,24 @@ public class NepoBlockExecutor {
     private boolean running = true;
     private RobotConfiguration robotConfig;
     private ConfigurationBlockExecutor configExecutor;
+    private IHardware hardware;
 
     /**
-     * Constructor
+     * Constructor with hardware dependency injection
      */
-    public NepoBlockExecutor() {
+    public NepoBlockExecutor(IHardware hardware) {
+        this.hardware = hardware;
         configExecutor = new ConfigurationBlockExecutor();
         robotConfig = configExecutor.createDefaultConfiguration(); // Default config
     }
     
+    /**
+     * Default constructor for backward compatibility
+     */
+    public NepoBlockExecutor() {
+        this(new NXTHardware());
+    }
+
     /**
      * Set robot configuration from XML config section
      */
@@ -48,6 +55,7 @@ public class NepoBlockExecutor {
         if (blockTypeAttr == null) return;
         
         String blockType = blockTypeAttr.toString();
+        System.out.println("Executing block: " + blockType);
 
         try {
             if ("robControls_start".equals(blockType)) {
@@ -72,25 +80,40 @@ public class NepoBlockExecutor {
                 // This is a sensor value block, handled in getValue
             } else if ("robActions_play_tone".equals(blockType)) {
                 executePlayToneBlock(block);
+            } else if ("robControls_loopForever".equals(blockType)) {
+                executeLoopForeverBlock(block);
+            } else if ("robActions_motorDiff_on".equals(blockType)) {
+                executeMotorDiffOnBlock(block);
+            } else if ("robControls_wait".equals(blockType)) {
+                executeWaitBlock(block);
+            } else if ("robSensors_light_getSample".equals(blockType)) {
+                // This is a sensor value block, handled in getValue
+            } else if ("robSensors_touch_getSample".equals(blockType)) {
+                // This is a sensor value block, handled in getValue
+            } else if ("robActions_motorDiff_turn_for".equals(blockType)) {
+                executeMotorDiffTurnForBlock(block);
             } else {
-                LCD.drawString("Unknown: " + blockType, 0, 7);
-                LCD.refresh();
-                Delay.msDelay(1000);
+                hardware.displayText("Unknown: " + blockType, 0, 7);
+                hardware.refreshDisplay();
+                hardware.delay(1000);
             }
-            
+
             // Execute next block in sequence
             IXMLElement nextBlock = getNextBlock(block);
             if (nextBlock != null) {
+                System.out.println("Found next block, executing...");
                 executeBlock(nextBlock);
+            } else {
+                System.out.println("No next block found");
             }
 
         } catch (Exception e) {
-            LCD.clear();
-            LCD.drawString("Error in block:", 0, 0);
-            LCD.drawString(blockType, 0, 1);
-            LCD.drawString(e.getMessage(), 0, 2);
-            LCD.refresh();
-            Button.waitForAnyPress();
+            hardware.clearDisplay();
+            hardware.displayText("Error in block:", 0, 0);
+            hardware.displayText(blockType, 0, 1);
+            hardware.displayText(e.getMessage(), 0, 2);
+            hardware.refreshDisplay();
+            hardware.waitForButtonPress();
         }
     }
     
@@ -98,24 +121,28 @@ public class NepoBlockExecutor {
      * Execute start block - find and execute statement blocks
      */
     private void executeStartBlock(IXMLElement block) {
+        System.out.println("Looking for statement block 'ST'");
         IXMLElement statement = getStatementBlock(block, "ST");
         if (statement != null) {
+            System.out.println("Found statement block, executing...");
             executeBlock(statement);
+        } else {
+            System.out.println("No statement block found");
         }
     }
-    
+
     /**
      * Execute display text block
      */
     private void executeDisplayTextBlock(IXMLElement block) {
         Object textValue = getValue(block, "OUT");
         if (textValue != null) {
-            LCD.clear();
-            LCD.drawString(textValue.toString(), 0, 0);
-            LCD.refresh();
+            hardware.clearDisplay();
+            hardware.displayText(textValue.toString(), 0, 0);
+            hardware.refreshDisplay();
         }
     }
-    
+
     /**
      * Execute motor on block
      */
@@ -127,7 +154,7 @@ public class NepoBlockExecutor {
         Object rotationValue = getValue(block, "VALUE");
         
         if (motorPort != null && powerValue instanceof Double) {
-            NXTRegulatedMotor motor = getMotor(motorPort);
+            IMotor motor = getMotor(motorPort);
             if (motor != null) {
                 double power = ((Double) powerValue).doubleValue();
                 int speed = (int) (Math.abs(power) * 7.2); // Convert percentage to degrees/second
@@ -152,20 +179,20 @@ public class NepoBlockExecutor {
             }
         }
     }
-    
+
     /**
      * Execute motor stop block
      */
     private void executeMotorStopBlock(IXMLElement block) {
         String motorPort = getFieldValue(block, "MOTORPORT");
         if (motorPort != null) {
-            NXTRegulatedMotor motor = getMotor(motorPort);
+            IMotor motor = getMotor(motorPort);
             if (motor != null) {
                 motor.stop();
             }
         }
     }
-    
+
     /**
      * Execute wait time block
      */
@@ -173,10 +200,10 @@ public class NepoBlockExecutor {
         Object waitValue = getValue(block, "WAIT");
         if (waitValue instanceof Double) {
             int milliseconds = ((Double) waitValue).intValue();
-            Delay.msDelay(milliseconds);
+            hardware.delay(milliseconds);
         }
     }
-    
+
     /**
      * Execute if block
      */
@@ -237,11 +264,135 @@ public class NepoBlockExecutor {
         if (frequencyValue instanceof Double && durationValue instanceof Double) {
             int frequency = ((Double) frequencyValue).intValue();
             int duration = ((Double) durationValue).intValue();
-            Sound.playTone(frequency, duration);
-            Delay.msDelay(duration);
+            hardware.playTone(frequency, duration);
+            hardware.delay(duration);
         }
     }
     
+    /**
+     * Execute loop forever block
+     */
+    private void executeLoopForeverBlock(IXMLElement block) {
+        System.out.println("Executing loop forever block");
+        System.out.println("Block structure:");
+        printBlockStructure(block, 0);
+        
+        IXMLElement doBlock = getStatementBlock(block, "DO");
+        int iterations = 0;
+        
+        System.out.println("Do block found: " + (doBlock != null));
+
+        while (running) {
+            if (doBlock != null) {
+                System.out.println("Loop iteration " + iterations);
+                executeBlock(doBlock);
+            }
+            iterations++;
+        }
+        System.out.println("Loop completed after " + iterations + " iterations");
+    }
+    
+    /**
+     * Debug method to print block structure
+     */
+    private void printBlockStructure(IXMLElement element, int depth) {
+        String indent = "  ".repeat(depth);
+        System.out.println(indent + element.getTagName());
+        
+        Vector<IXMLElement> children = element.getAllChildren();
+        for (int i = 0; i < children.size(); i++) {
+            printBlockStructure(children.elementAt(i), depth + 1);
+        }
+    }
+
+    /**
+     * Execute motor differential on block
+     */
+    private void executeMotorDiffOnBlock(IXMLElement block) {
+        String direction = getFieldValue(block, "DIRECTION");
+        Object powerValue = getValue(block, "POWER");
+        
+        if (powerValue instanceof Double) {
+            double power = ((Double) powerValue).doubleValue();
+            int speed = (int) (Math.abs(power) * 7.2);
+            
+            // Control both motors for differential drive
+            IMotor motorA = getMotor("A");
+            IMotor motorC = getMotor("C");
+            
+            if (motorA != null && motorC != null) {
+                motorA.setSpeed(speed);
+                motorC.setSpeed(speed);
+                
+                if ("FOREWARD".equals(direction)) {
+                    motorA.forward();
+                    motorC.forward();
+                } else if ("BACKWARD".equals(direction)) {
+                    motorA.backward();
+                    motorC.backward();
+                }
+            }
+        }
+    }
+    
+    /**
+     * Execute wait block (wait for condition)
+     */
+    private void executeWaitBlock(IXMLElement block) {
+        System.out.println("Executing wait block");
+        Object conditionValue = getValue(block, "WAIT0");
+        System.out.println("Initial condition value: " + conditionValue);
+        int maxWaitTime = 1000; // Reduced to 1 second for testing
+        long startTime = System.currentTimeMillis();
+        
+        while (System.currentTimeMillis() - startTime < maxWaitTime && running) {
+            conditionValue = getValue(block, "WAIT0");
+            if (conditionValue instanceof Boolean && ((Boolean) conditionValue).booleanValue()) {
+                System.out.println("Wait condition met");
+                break;
+            }
+            try {
+                Thread.sleep(50); // Check every 50ms
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+        System.out.println("Wait block completed");
+    }
+
+    /**
+     * Execute motor differential turn for block
+     */
+    private void executeMotorDiffTurnForBlock(IXMLElement block) {
+        String direction = getFieldValue(block, "DIRECTION");
+        Object powerValue = getValue(block, "POWER");
+        Object degreeValue = getValue(block, "DEGREE");
+        
+        if (powerValue instanceof Double && degreeValue instanceof Double) {
+            double power = ((Double) powerValue).doubleValue();
+            double degrees = ((Double) degreeValue).doubleValue();
+            int speed = (int) (Math.abs(power) * 7.2);
+            
+            IMotor motorA = getMotor("A");
+            IMotor motorC = getMotor("C");
+            
+            if (motorA != null && motorC != null) {
+                motorA.setSpeed(speed);
+                motorC.setSpeed(speed);
+                
+                if ("RIGHT".equals(direction)) {
+                    // Turn right: left motor forward, right motor backward
+                    motorA.rotate((int) degrees);
+                    motorC.rotate(-(int) degrees);
+                } else if ("LEFT".equals(direction)) {
+                    // Turn left: right motor forward, left motor backward
+                    motorA.rotate(-(int) degrees);
+                    motorC.rotate((int) degrees);
+                }
+            }
+        }
+    }
+
     /**
      * Get value from a value block
      */
@@ -287,19 +438,39 @@ public class NepoBlockExecutor {
         } else if ("robSensors_touch_isPressed".equals(blockType)) {
             String sensorPort = getFieldValue(block, "SENSORPORT");
             if (sensorPort != null) {
-                TouchSensor sensor = new TouchSensor(getSensorPort(sensorPort));
-                return new Boolean(sensor.isPressed());
+                ISensor sensor = hardware.getSensor(sensorPort, "TOUCH");
+                if (sensor != null) {
+                    return new Boolean(sensor.isPressed());
+                }
             }
         } else if ("robSensors_ultrasonic_distance".equals(blockType)) {
             String sensorPort = getFieldValue(block, "SENSORPORT");
             if (sensorPort != null) {
-                UltrasonicSensor sensor = new UltrasonicSensor(getSensorPort(sensorPort));
-                return new Double(sensor.getDistance());
+                ISensor sensor = hardware.getSensor(sensorPort, "ULTRASONIC");
+                if (sensor != null) {
+                    return new Double(sensor.getDistance());
+                }
+            }
+        } else if ("robSensors_light_getSample".equals(blockType)) {
+            String sensorPort = getFieldValue(block, "SENSORPORT");
+            if (sensorPort != null) {
+                ISensor sensor = hardware.getSensor(sensorPort, "LIGHT");
+                if (sensor != null) {
+                    return new Double(sensor.getValue());
+                }
+            }
+        } else if ("robSensors_touch_getSample".equals(blockType)) {
+            String sensorPort = getFieldValue(block, "SENSORPORT");
+            if (sensorPort != null) {
+                ISensor sensor = hardware.getSensor(sensorPort, "TOUCH");
+                if (sensor != null) {
+                    return new Boolean(sensor.isPressed());
+                }
             }
         } else if ("robActions_motor_getPower".equals(blockType)) {
             String motorPort = getFieldValue(block, "MOTORPORT");
             if (motorPort != null) {
-                NXTRegulatedMotor motor = getMotor(motorPort);
+                IMotor motor = getMotor(motorPort);
                 if (motor != null) {
                     // Return current motor speed as power percentage (approximate)
                     int speed = motor.getSpeed();
@@ -419,7 +590,7 @@ public class NepoBlockExecutor {
             // Stop motor immediately
             String motorPort = getFieldValue(block, "MOTORPORT");
             if (motorPort != null) {
-                NXTRegulatedMotor motor = getMotor(motorPort);
+                IMotor motor = getMotor(motorPort);
                 if (motor != null) {
                     motor.stop(true); // Immediate stop with brake
                 }
@@ -429,7 +600,7 @@ public class NepoBlockExecutor {
             // Float motor (coast to stop)
             String motorPort = getFieldValue(block, "MOTORPORT");
             if (motorPort != null) {
-                NXTRegulatedMotor motor = getMotor(motorPort);
+                IMotor motor = getMotor(motorPort);
                 if (motor != null) {
                     motor.flt(true); // Float/coast
                 }
@@ -502,8 +673,8 @@ public class NepoBlockExecutor {
             return new Double(randomValue);
         } else if ("robActions_display_clear".equals(blockType)) {
             // Clear LCD display
-            LCD.clear();
-            LCD.refresh();
+            hardware.clearDisplay();
+            hardware.refreshDisplay();
             return null;
         } else if ("robControls_waitUntil".equals(blockType)) {
             // Wait until condition becomes true
@@ -529,7 +700,7 @@ public class NepoBlockExecutor {
             Object speedValue = getValue(block, "SPEED");
             
             if (motorPort != null && speedValue instanceof Double) {
-                NXTRegulatedMotor motor = getMotor(motorPort);
+                IMotor motor = getMotor(motorPort);
                 if (motor != null) {
                     int speed = ((Double) speedValue).intValue();
                     speed = Math.max(0, Math.min(900, speed)); // Clamp to valid range
@@ -541,7 +712,7 @@ public class NepoBlockExecutor {
             // Get motor encoder rotation value
             String motorPort = getFieldValue(block, "MOTORPORT");
             if (motorPort != null) {
-                NXTRegulatedMotor motor = getMotor(motorPort);
+                IMotor motor = getMotor(motorPort);
                 if (motor != null) {
                     int rotation = motor.getTachoCount();
                     return new Double(rotation);
@@ -626,17 +797,22 @@ public class NepoBlockExecutor {
      * Get statement block by name
      */
     private IXMLElement getStatementBlock(IXMLElement parentBlock, String statementName) {
+        System.out.println("Looking for statement: " + statementName);
         Vector<IXMLElement> statements = parentBlock.getChildren("statement");
+        System.out.println("Found " + statements.size() + " statement elements");
         for (int i = 0; i < statements.size(); i++) {
             IXMLElement statement = statements.elementAt(i);
             IString nameAttr = statement.getAttribute("name");
+            System.out.println("Statement " + i + " name: " + (nameAttr != null ? nameAttr.toString() : "null"));
             if (nameAttr != null && statementName.equals(nameAttr.toString())) {
-                return statement.getChild("block");
+                IXMLElement blockChild = statement.getChild("block");
+                System.out.println("Found matching statement, has block child: " + (blockChild != null));
+                return blockChild;
             }
         }
         return null;
     }
-    
+
     /**
      * Get next block in sequence
      */
@@ -651,34 +827,15 @@ public class NepoBlockExecutor {
     /**
      * Get motor by port letter
      */
-    private NXTRegulatedMotor getMotor(String port) {
+    private IMotor getMotor(String port) {
         // Check if motor is configured
         if (robotConfig != null && !robotConfig.hasMotor(port)) {
             return null; // Motor not configured
         }
         
-        if ("A".equals(port)) return Motor.A;
-        if ("B".equals(port)) return Motor.B;
-        if ("C".equals(port)) return Motor.C;
-        return null;
+        return hardware.getMotor(port);
     }
-    
-    /**
-     * Get sensor port by number string
-     */
-    private SensorPort getSensorPort(String port) {
-        // Check if sensor is configured
-        if (robotConfig != null && !robotConfig.hasSensor(port)) {
-            return null; // Sensor not configured
-        }
-        
-        if ("1".equals(port)) return SensorPort.S1;
-        if ("2".equals(port)) return SensorPort.S2;
-        if ("3".equals(port)) return SensorPort.S3;
-        if ("4".equals(port)) return SensorPort.S4;
-        return SensorPort.S1;
-    }
-    
+
     /**
      * Check if a sensor of the expected type is configured on the port
      */
