@@ -63,6 +63,27 @@ public class ShallowXMLElement implements IXMLElement {
     }
     
     /**
+     * Get all attributes - lazy parsing of attributes
+     */
+    public Map<String, IString> getAttributes() {
+        if (!attributesParsed) {
+            parseAttributes();
+        }
+        if (attributes == null) {
+            return new HashMap<String, IString>();
+        }
+        
+        // Convert Hashtable to Map and return a copy
+        Map<String, IString> result = new HashMap<String, IString>();
+        Enumeration<String> keys = attributes.keys();
+        while (keys.hasMoreElements()) {
+            String key = keys.nextElement();
+            result.put(key, attributes.get(key));
+        }
+        return result;
+    }
+
+    /**
      * Get child element by tag name - lazy parsing of children
      */
     public IXMLElement getChild(String tagName) {

@@ -6,6 +6,7 @@ import java.util.*;
 public interface IXMLElement {
     String getTagName();
     IString getAttribute(String name);
+    Map<String, IString> getAttributes();
     IXMLElement getChild(String tagName);
     Vector<IXMLElement> getChildren(String tagName);
     Vector<IXMLElement> getAllChildren();
