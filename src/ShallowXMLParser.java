@@ -100,11 +100,11 @@ public class ShallowXMLParser implements IXMLParser {
         }
         
         // Extract tag name for finding closing tag
-        String tagName = extractTagNameFromOpenTag(openTag);
+        String tagName = ShallowXMLElement.extractTagName(openTag);
         String closeTagPattern = "</" + tagName + ">";
         
-        // Find matching closing tag
-        int closeTagStart = content.indexOf(closeTagPattern);
+        // Find matching closing tag using proper nesting
+        int closeTagStart = ShallowXMLElement.findMatchingClosingTag(content, tagName, openTagEnd + 1);
         if (closeTagStart == -1) {
             // Treat as self-closing if no closing tag found
             return new ShallowXMLElement(
@@ -123,18 +123,8 @@ public class ShallowXMLParser implements IXMLParser {
         return new ShallowXMLElement(allContent, openTag, innerContent);
     }
     
-    /**
-     * Extract tag name from opening tag
-     */
-    private static String extractTagNameFromOpenTag(IString openTag) {
-        int spacePos = openTag.indexOf(' ');
-        int closePos = openTag.indexOf('>');
-        
-        int endPos = (spacePos != -1 && spacePos < closePos) ? spacePos : closePos;
-        if (endPos > 1) {
-            return openTag.substring(1, endPos).toString();
-        }
-        return "unknown";
-    }
+
+    
+
     
 }

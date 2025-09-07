@@ -34,24 +34,15 @@ public class ShallowXMLElement implements IXMLElement {
     }
     
     /**
-     * Get tag name - lightweight extraction from openTag
+     * Get tag name - lightweight extraction from openTag using centralized method
      */
     public String getTagName() {
         if (tagName == null) {
-            // Extract tag name from "<tagName ..." or "<tagName>"
-            int spacePos = openTag.indexOf(' ');
-            int closePos = openTag.indexOf('>');
-            
-            int endPos = (spacePos != -1 && spacePos < closePos) ? spacePos : closePos;
-            if (endPos > 1) {
-                tagName = openTag.substring(1, endPos).toString();
-            } else {
-                tagName = "unknown";
-            }
+            tagName = ShallowXMLElement.extractTagName(openTag);
         }
         return tagName;
     }
-    
+
     /**
      * Get attribute value - lazy parsing of attributes
      */
@@ -144,7 +135,7 @@ public class ShallowXMLElement implements IXMLElement {
      * Get text content - lazy extraction
      */
     public String getTextContent() {
-        if (textContent == null && !childrenParsed) {
+        if (textContent == null) {
             // Check if content contains child elements
             if (innerContent.indexOf('<') == -1) {
                 // Pure text content
@@ -156,7 +147,7 @@ public class ShallowXMLElement implements IXMLElement {
         }
         return textContent;
     }
-    
+
     /**
      * Lazy parsing of attributes from openTag
      * Only called when attributes are first accessed
@@ -278,16 +269,16 @@ public class ShallowXMLElement implements IXMLElement {
                 continue;
             }
             
-            // Find matching closing tag
-            String tagName = extractTagName(openTagContent);
-            String closeTagPattern = "</" + tagName + ">";
+            // Find matching closing tag using proper nesting
+            String tagName = ShallowXMLElement.extractTagName(openTagContent);
+            int closeTagStart = ShallowXMLElement.findMatchingClosingTag(content, tagName, tagEnd + 1);
             
-            int closeTagStart = content.indexOf(closeTagPattern, pos);
             if (closeTagStart == -1) {
                 pos = tagEnd + 1;
                 continue;
             }
             
+            String closeTagPattern = "</" + tagName + ">";
             int closeTagEnd = closeTagStart + closeTagPattern.length();
             
             // Create child element
@@ -302,13 +293,83 @@ public class ShallowXMLElement implements IXMLElement {
     }
     
     /**
-     * Extract tag name from opening tag
+     * Find the matching closing tag for a given tag name, handling nested tags properly.
+     * This is a centralized utility method used by both parser and element classes.
+     * 
+     * @param content The XML content to search in
+     * @param tagName The tag name to find the closing tag for (without < >)
+     * @param startPos The position to start searching from (should be after the opening tag)
+     * @return The position of the matching closing tag, or -1 if not found
      */
-    private String extractTagName(IString openTag) {
+    public static int findMatchingClosingTag(IString content, String tagName, int startPos) {
+        if (content == null || tagName == null || startPos < 0 || startPos >= content.length()) {
+            return -1;
+        }
+        
+        String openPattern = "<" + tagName;
+        String closePattern = "</" + tagName + ">";
+        
+        int depth = 1; // We're already inside one tag
+        int pos = startPos;
+        
+        while (pos < content.length() && depth > 0) {
+            int nextOpen = content.indexOf(openPattern, pos);
+            int nextClose = content.indexOf(closePattern, pos);
+            
+            // If no closing tag found, return -1
+            if (nextClose == -1) {
+                return -1;
+            }
+            
+            // If there's an opening tag before the closing tag, increase depth
+            if (nextOpen != -1 && nextOpen < nextClose) {
+                // Make sure it's actually an opening tag (not just a substring)
+                char charAfterTag = (nextOpen + openPattern.length() < content.length()) 
+                    ? content.charAt(nextOpen + openPattern.length()) : ' ';
+                if (charAfterTag == ' ' || charAfterTag == '>' || charAfterTag == '/') {
+                    depth++;
+                    pos = nextOpen + openPattern.length();
+                } else {
+                    pos = nextOpen + 1;
+                }
+            } else {
+                // Found a closing tag
+                depth--;
+                if (depth == 0) {
+                    return nextClose;
+                }
+                pos = nextClose + closePattern.length();
+            }
+        }
+        
+        return -1; // No matching closing tag found
+    }
+    
+    /**
+     * Extract tag name from opening tag.
+     * This is a centralized utility method used by both parser and element classes.
+     * 
+     * @param openTag The opening tag string (e.g., "<tagName attr='val'>" or "<tagName/>")
+     * @return The tag name without brackets and attributes, or "unknown" if parsing fails
+     */
+    public static String extractTagName(IString openTag) {
+        if (openTag == null || openTag.length() < 2) {
+            return "unknown";
+        }
+        
         int spacePos = openTag.indexOf(' ');
         int closePos = openTag.indexOf('>');
+        int slashPos = openTag.indexOf('/');
         
-        int endPos = (spacePos != -1 && spacePos < closePos) ? spacePos : closePos;
+        // Find the end position for tag name extraction
+        int endPos = closePos;
+        if (spacePos != -1 && spacePos < closePos) {
+            endPos = spacePos;
+        }
+        if (slashPos != -1 && slashPos < endPos && slashPos > 0) {
+            endPos = slashPos;
+        }
+        
         if (endPos > 1) {
             return openTag.substring(1, endPos).toString();
         }
