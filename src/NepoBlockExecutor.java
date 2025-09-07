@@ -23,13 +23,6 @@ public class NepoBlockExecutor {
         configExecutor = new ConfigurationBlockExecutor();
         robotConfig = configExecutor.createDefaultConfiguration(); // Default config
     }
-    
-    /**
-     * Default constructor for backward compatibility
-     */
-    public NepoBlockExecutor() {
-        this(new NXTHardware());
-    }
 
     /**
      * Set robot configuration from XML config section
