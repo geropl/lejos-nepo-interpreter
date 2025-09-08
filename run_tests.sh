@@ -100,57 +100,116 @@ run_tests_in_dir() {
         return 0
     fi
     
-    local test_files=$(find "$test_dir" -name "Test*.java" 2>/dev/null)
-    if [ -z "$test_files" ]; then
-        echo "⚠️  No Test*.java files found in $test_dir"
-        return 0
-    fi
-    
-    echo "📋 Running $test_type tests..."
-    echo ""
-    
-    local passed=0
-    local failed=0
-    local total=0
-    
-    for test_file in $test_files; do
-        local class_name=$(basename "$test_file" .java)
-        local relative_path=${test_file#test/}
+    # Special handling for integration tests
+    if [ "$test_type" = "Integration" ]; then
+        local test_files=$(find "$test_dir" -name "TestIntegrationFramework.java" 2>/dev/null)
+        if [ -z "$test_files" ]; then
+            echo "⚠️  No TestIntegrationFramework.java found in $test_dir"
+            return 0
+        fi
         
-        echo "🧪 Compiling and running $class_name..."
+        echo "📋 Running $test_type tests..."
+        echo ""
         
-        # Compile the test file
+        local passed=0
+        local failed=0
+        local total=0
+        
+        # Compile all Java files in integration directory
+        local all_java_files=$(find "$test_dir" -name "*.java" 2>/dev/null)
+        echo "🧪 Compiling integration test framework and scenarios..."
+        
         if [ "$VERBOSE" = true ]; then
-            javac -cp "src:test/build" -d test/build "$test_file"
+            javac -cp "src:test:test/build" -d test/build $all_java_files
         else
-            javac -cp "src:test/build" -d test/build "$test_file" 2>/dev/null || {
-                echo "❌ Failed to compile $class_name"
+            javac -cp "src:test:test/build" -d test/build $all_java_files 2>/dev/null || {
+                echo "❌ Failed to compile integration test framework"
                 failed=$((failed + 1))
                 total=$((total + 1))
-                continue
+                echo "📊 $test_type Results: $passed passed, $failed failed, $total total"
+                echo ""
+                return $failed
             }
         fi
         
-        # Run the test
-        echo "   Running $class_name..."
+        # Run only TestIntegrationFramework
+        echo "   Running TestIntegrationFramework..."
         if [ "$VERBOSE" = true ]; then
-            java -cp "src:test/build" "$class_name"
+            java -cp "src:test:test/build" "TestIntegrationFramework"
             local exit_code=$?
         else
-            java -cp "src:test/build" "$class_name" >/dev/null 2>&1
+            java -cp "src:test:test/build" "TestIntegrationFramework" >/dev/null 2>&1
             local exit_code=$?
         fi
         
         if [ $exit_code -eq 0 ]; then
-            echo "   ✅ $class_name PASSED"
+            echo "   ✅ TestIntegrationFramework PASSED"
             passed=$((passed + 1))
         else
-            echo "   ❌ $class_name FAILED"
+            echo "   ❌ TestIntegrationFramework FAILED"
             failed=$((failed + 1))
         fi
         total=$((total + 1))
         echo ""
-    done
+        
+        echo "📊 $test_type Results: $passed passed, $failed failed, $total total"
+        echo ""
+        
+        return $failed
+    else
+        # Standard unit test handling
+        local test_files=$(find "$test_dir" -name "Test*.java" 2>/dev/null)
+        if [ -z "$test_files" ]; then
+            echo "⚠️  No Test*.java files found in $test_dir"
+            return 0
+        fi
+        
+        echo "📋 Running $test_type tests..."
+        echo ""
+        
+        local passed=0
+        local failed=0
+        local total=0
+        
+        for test_file in $test_files; do
+            local class_name=$(basename "$test_file" .java)
+            local relative_path=${test_file#test/}
+            
+            echo "🧪 Compiling and running $class_name..."
+            
+            # Compile the test file
+            if [ "$VERBOSE" = true ]; then
+                javac -cp "src:test:test/build" -d test/build "$test_file"
+            else
+                javac -cp "src:test:test/build" -d test/build "$test_file" 2>/dev/null || {
+                    echo "❌ Failed to compile $class_name"
+                    failed=$((failed + 1))
+                    total=$((total + 1))
+                    continue
+                }
+            fi
+            
+            # Run the test
+            echo "   Running $class_name..."
+            if [ "$VERBOSE" = true ]; then
+                java -cp "src:test:test/build" "$class_name"
+                local exit_code=$?
+            else
+                java -cp "src:test:test/build" "$class_name" >/dev/null 2>&1
+                local exit_code=$?
+            fi
+            
+            if [ $exit_code -eq 0 ]; then
+                echo "   ✅ $class_name PASSED"
+                passed=$((passed + 1))
+            else
+                echo "   ❌ $class_name FAILED"
+                failed=$((failed + 1))
+            fi
+            total=$((total + 1))
+            echo ""
+        done
+    fi
     
     echo "📊 $test_type Results: $passed passed, $failed failed, $total total"
     echo ""

@@ -5,13 +5,82 @@ import java.util.*;
  * Integration test framework for NEPO XML programs
  * 
  * Features:
- * - Discovers test cases in test/integration/cases/
+ * - Table-driven test cases with program files and scenarios
  * - Runs XML programs with MockHardware
  * - Generates golden files if missing (test fails)
  * - Compares output with existing golden files
- * - Follows Test... naming convention
+ * - Golden files named as {program}_{testcase}.golden
  */
 public class TestIntegrationFramework {
+    
+    /**
+     * Represents a single test case with program file and optional scenario.
+     */
+    public static class TestCase {
+        public final String name;
+        public final String programFile;
+        public final DynamicTestScenario scenario;
+        
+        public TestCase(String name, String programFile) {
+            this.name = name;
+            this.programFile = programFile;
+            this.scenario = new DynamicTestScenario(); // Empty scenario
+        }
+        
+        public TestCase(String name, String programFile, DynamicTestScenario scenario) {
+            this.name = name;
+            this.programFile = programFile;
+            this.scenario = scenario;
+        }
+
+        public String getProgramName() {
+            String fileName = this.programFile;
+            int lastDot = fileName.lastIndexOf('.');
+            return lastDot > 0 ? fileName.substring(0, lastDot) : fileName;
+        }
+        
+        /**
+         * Generate golden file name from test case.
+         * Format: {program_name}_{test_case_name}.golden
+         */
+        public String getGoldenFileName() {
+            String programName = this.getProgramName();
+            return programName + "_" + this.name + GOLDEN_EXTENSION;
+        }
+    }
+    
+    // Static array of all test cases (like TestXMLParser pattern)
+    private static final TestCase[] TEST_CASES = {
+        // Basic tests (no scenarios)
+        new TestCase("basic", "programm1.xml"),
+        
+        // Scenario-based tests using the same program with different conditions
+        new TestCase("collision", "dynamic_test.xml", 
+            new DynamicTestScenario()
+                .atIteration(5).setTouchSensor(1, true)),
+            
+        new TestCase("obstacle_avoidance", "dynamic_test.xml",
+            new DynamicTestScenario()
+                .atIteration(5).setDistanceSensor(3, 10.0)),
+            
+        new TestCase("light_following", "dynamic_test.xml",
+            new DynamicTestScenario()
+                .atIteration(3).setLightSensor(4, 60.0)
+                .atIteration(6).setLightSensor(4, 80.0)),
+            
+        // Custom complex scenario
+        new TestCase("complex_navigation", "dynamic_test.xml",
+            new DynamicTestScenario()
+                .atIteration(2).setDistanceSensor(3, 80.0)
+                .atIteration(4).setLightSensor(4, 25.0)
+                .atIteration(6).setTouchSensor(1, true)),
+                
+        // Multiple tests for same program
+        new TestCase("normal_run", "dynamic_test.xml"),
+        new TestCase("early_collision", "dynamic_test.xml",
+            new DynamicTestScenario()
+                .atIteration(3).setTouchSensor(1, true))
+    };
     
     private static final String CASES_DIR = "test/integration/cases";
     private static final String GOLDEN_EXTENSION = ".golden";
@@ -45,52 +114,38 @@ public class TestIntegrationFramework {
     }
     
     /**
-     * Discover and run all test cases in the cases directory
+     * Run all registered test cases
      */
     private static void runAllTests() {
-        File casesDir = new File(CASES_DIR);
-        if (!casesDir.exists()) {
-            System.err.println("Cases directory not found: " + CASES_DIR);
-            System.err.println("Please create the directory and add test cases.");
-            return;
-        }
-        
-        // Find all XML files in the cases directory
-        File[] xmlFiles = casesDir.listFiles((dir, name) -> name.endsWith(XML_EXTENSION));
-        if (xmlFiles == null || xmlFiles.length == 0) {
-            System.out.println("No XML test cases found in " + CASES_DIR);
-            System.out.println("Add .xml files to create test cases.");
-            return;
-        }
-        
-        System.out.println("Found " + xmlFiles.length + " test case(s):");
-        for (File xmlFile : xmlFiles) {
-            String baseName = getBaseName(xmlFile.getName());
-            System.out.println("  - " + baseName);
+        System.out.println("Found " + TEST_CASES.length + " test case(s):");
+        for (TestCase testCase : TEST_CASES) {
+            String programName = testCase.getProgramName();
+            String scenarioInfo = testCase.scenario.hasScenarios() ? 
+                " (with " + testCase.scenario.getScenarioCount() + " scenario(s))" : "";
+            System.out.println("  - " + testCase.name + " (" + programName + ")" + scenarioInfo);
         }
         System.out.println();
         
         // Run each test case
-        for (File xmlFile : xmlFiles) {
-            runTestCase(xmlFile);
+        for (TestCase testCase : TEST_CASES) {
+            runTestCase(testCase);
         }
     }
     
     /**
      * Run a single test case
      */
-    private static void runTestCase(File xmlFile) {
-        String baseName = getBaseName(xmlFile.getName());
-        String goldenFileName = baseName + GOLDEN_EXTENSION;
-        File goldenFile = new File(xmlFile.getParent(), goldenFileName);
+    private static void runTestCase(TestCase testCase) {
+        String goldenFileName = testCase.getGoldenFileName();
+        File goldenFile = new File(CASES_DIR, goldenFileName);
         
         totalTests++;
-        System.out.println("🧪 Running test case: " + baseName);
+        String programName = testCase.getProgramName();
+        System.out.println("🧪 Running test case: " + testCase.name + " (" + programName + ")");
         
         try {
             // Execute the test and capture output
-            String actualOutput = executeTest(xmlFile);
-            
+            String actualOutput = executeTest(testCase);
             if (!goldenFile.exists()) {
                 // Generate golden file
                 System.out.println("   📝 Generating golden file: " + goldenFileName);
@@ -122,6 +177,8 @@ public class TestIntegrationFramework {
             if (e.getCause() != null) {
                 System.out.println("   Caused by: " + e.getCause().getMessage());
             }
+            // Print stack trace for debugging
+            e.printStackTrace();
         }
         
         System.out.println();
@@ -130,24 +187,29 @@ public class TestIntegrationFramework {
     /**
      * Execute a test case and return the captured MockHardware output
      */
-    private static String executeTest(File xmlFile) throws Exception {
+    private static String executeTest(TestCase testCase) throws Exception {
         // Read XML content
-        String xmlContent = readFile(xmlFile.getAbsolutePath());
+        File programFile = new File(CASES_DIR, testCase.programFile);
+        String xmlContent = readFile(programFile.getAbsolutePath());
         
         // Parse XML
         ShallowXMLParser parser = new ShallowXMLParser();
         IXMLElement root = parser.parseXML(xmlContent);
-        
         if (root == null) {
             throw new Exception("Failed to parse XML");
         }
         
-        // Create mock hardware to capture interactions
+        // Determine if this test has scenarios
+        boolean hasScenarios = testCase.scenario.hasScenarios();
+        List<SensorScenario> scenarios;
+        if (hasScenarios) {
+            System.out.println("   🔄 Applying " + testCase.scenario.getScenarioCount() + " scenario(s)");
+            scenarios = testCase.scenario.build();
+        } else {
+            scenarios = new ArrayList<SensorScenario>();
+        }
         MockHardware mockHardware = new MockHardware();
-        mockHardware.clearLog(); // Start with clean log
-        
-        // Create NEPO block executor with mock hardware
-        NepoBlockExecutor executor = new NepoBlockExecutor(mockHardware);
+        NepoBlockExecutor executor = new TestNepoBlockExecutor(mockHardware, scenarios);
         
         // Find and set configuration if present
         IXMLElement config = findElement(root, "config");
@@ -210,14 +272,6 @@ public class TestIntegrationFramework {
             }
         }
         return content.toString();
-    }
-    
-    /**
-     * Get base name without extension
-     */
-    private static String getBaseName(String fileName) {
-        int lastDot = fileName.lastIndexOf('.');
-        return lastDot > 0 ? fileName.substring(0, lastDot) : fileName;
     }
     
     /**

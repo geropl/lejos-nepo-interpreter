@@ -196,6 +196,60 @@ public class TestXMLParser {
         ),
         
         new TestCase(
+            "Config structure with motor",
+            "<config>" +
+            "<block_set xmlns=\"http://de.fhg.iais.roberta.blockly\" robottype=\"nxt\" xmlversion=\"3.1\" description=\"\" tags=\"\">" +
+            "<instance x=\"470\" y=\"50\">" +
+            "<block type=\"robBrick_EV3-Brick\" id=\"1\" intask=\"true\" deletable=\"false\">" +
+            "<field name=\"WHEEL_DIAMETER\">5.6</field>" +
+            "<field name=\"TRACK_WIDTH\">11</field>" +
+            "<value name=\"MA\">" +
+            "<block type=\"robBrick_motor_big\" id=\"6\" intask=\"true\">" +
+            "<field name=\"MOTOR_REGULATION\">TRUE</field>" +
+            "<field name=\"MOTOR_REVERSE\">OFF</field>" +
+            "<field name=\"MOTOR_DRIVE\">RIGHT</field>" +
+            "</block>" +
+            "</value>" +
+            "</block>" +
+            "</instance>" +
+            "</block_set>" +
+            "</config>",
+            "<config>\n" +
+            "  <block_set description=\"tags=\" robottype=\"nxt\" xmlns=\"http://de.fhg.iais.roberta.blockly\" xmlversion=\"3.1\">\n" +
+            "    <instance x=\"470\" y=\"50\">\n" +
+            "      <block deletable=\"false\" id=\"1\" intask=\"true\" type=\"robBrick_EV3-Brick\">\n" +
+            "        <field name=\"WHEEL_DIAMETER\">5.6</field>\n" +
+            "        <field name=\"TRACK_WIDTH\">11</field>\n" +
+            "        <value name=\"MA\">\n" +
+            "          <block id=\"6\" intask=\"true\" type=\"robBrick_motor_big\">\n" +
+            "            <field name=\"MOTOR_REGULATION\">TRUE</field>\n" +
+            "            <field name=\"MOTOR_REVERSE\">OFF</field>\n" +
+            "            <field name=\"MOTOR_DRIVE\">RIGHT</field>\n" +
+            "          </block>\n" +
+            "        </value>\n" +
+            "      </block>\n" +
+            "    </instance>\n" +
+            "  </block_set>\n" +
+            "</config>"
+        ),
+        
+        new TestCase(
+            "XML Parser Bug Reproduction - Instance Structure",
+            "<instance x=\"470\" y=\"50\">" +
+            "<block type=\"robBrick_EV3-Brick\" id=\"1\" intask=\"true\" deletable=\"false\">" +
+            "<field name=\"WHEEL_DIAMETER\">5.6</field>" +
+            "<field name=\"TRACK_WIDTH\">11</field>" +
+            "</block>" +
+            "</instance>",
+            "<instance x=\"470\" y=\"50\">\n" +
+            "  <block deletable=\"false\" id=\"1\" intask=\"true\" type=\"robBrick_EV3-Brick\">\n" +
+            "    <field name=\"WHEEL_DIAMETER\">5.6</field>\n" +
+            "    <field name=\"TRACK_WIDTH\">11</field>\n" +
+            "  </block>\n" +
+            "</instance>"
+        ),
+        
+        new TestCase(
             "Export wrapper structure",
             "<export xmlns=\"http://de.fhg.iais.roberta.blockly\">" +
             "<program>" +
@@ -290,8 +344,10 @@ public class TestXMLParser {
         
         if (failed == 0) {
             System.out.println("🎉 All tests passed!");
+            System.exit(0);
         } else {
             System.out.println("❌ " + failed + " test(s) failed");
+            System.exit(1);
         }
     }
     

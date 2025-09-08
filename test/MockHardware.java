@@ -75,6 +75,67 @@ public class MockHardware implements IHardware {
     public void clearLog() {
         log.clear();
     }
+    
+    /**
+     * Get access to the sensors map for dynamic scenarios.
+     */
+    protected Map<String, MockSensor> getSensorsMap() {
+        return sensors;
+    }
+    
+    /**
+     * Get access to the motors map for dynamic scenarios.
+     */
+    protected Map<String, MockMotor> getMotorsMap() {
+        return motors;
+    }
+    
+    /**
+     * Convenience method to set sensor values for dynamic scenarios.
+     * Creates sensor if it doesn't exist and sets the appropriate value.
+     * 
+     * @param port Sensor port
+     * @param type Sensor type (TOUCH, LIGHT, ULTRASONIC)
+     * @param value Value to set (Boolean for touch, Double for others)
+     */
+    public void setSensorValue(String port, String type, Object value) {
+        ISensor sensor = getSensor(port, type);
+        if (sensor instanceof MockSensor) {
+            MockSensor mockSensor = (MockSensor) sensor;
+            
+            if ("TOUCH".equals(type) && value instanceof Boolean) {
+                mockSensor.setPressed(((Boolean) value).booleanValue());
+                log.add("[Scenario] TouchSensor(" + port + ").setPressed(" + value + ")");
+            } else if ("LIGHT".equals(type) && value instanceof Double) {
+                mockSensor.setLightValue(((Double) value).doubleValue());
+                log.add("[Scenario] LightSensor(" + port + ").setValue(" + value + ")");
+            } else if ("ULTRASONIC".equals(type) && value instanceof Double) {
+                mockSensor.setDistance(((Double) value).doubleValue());
+                log.add("[Scenario] DistanceSensor(" + port + ").setDistance(" + value + ")");
+            }
+        }
+    }
+    
+    /**
+     * Convenience method to set touch sensor value.
+     */
+    public void setTouchSensorValue(String port, boolean pressed) {
+        setSensorValue(port, "TOUCH", Boolean.valueOf(pressed));
+    }
+    
+    /**
+     * Convenience method to set light sensor value.
+     */
+    public void setLightSensorValue(String port, double value) {
+        setSensorValue(port, "LIGHT", Double.valueOf(value));
+    }
+    
+    /**
+     * Convenience method to set distance sensor value.
+     */
+    public void setDistanceSensorValue(String port, double distance) {
+        setSensorValue(port, "ULTRASONIC", Double.valueOf(distance));
+    }
 
     /**
      * Mock motor implementation
@@ -141,11 +202,12 @@ public class MockHardware implements IHardware {
     /**
      * Mock sensor implementation
      */
-    private class MockSensor implements ISensor {
+    protected class MockSensor implements ISensor {
         private final String port;
         private final String type;
         private boolean pressed = false;
         private double distance = 50.0;
+        private double lightValue = 75.0;
         
         public MockSensor(String port, String type) {
             this.port = port;
@@ -178,7 +240,7 @@ public class MockHardware implements IHardware {
             } else if ("ULTRASONIC".equals(type)) {
                 value = getDistance();
             } else if ("LIGHT".equals(type)) {
-                value = 75.0; // Mock light sensor value
+                value = lightValue;
             } else {
                 value = 0.0;
             }
@@ -189,5 +251,6 @@ public class MockHardware implements IHardware {
         // Test helper methods
         public void setPressed(boolean pressed) { this.pressed = pressed; }
         public void setDistance(double distance) { this.distance = distance; }
+        public void setLightValue(double lightValue) { this.lightValue = lightValue; }
     }
 }

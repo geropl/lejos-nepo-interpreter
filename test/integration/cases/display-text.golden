@@ -1,3 +1,0 @@
-clearDisplay()
-displayText('Hello NEPO!', 0, 0)
-refreshDisplay()
