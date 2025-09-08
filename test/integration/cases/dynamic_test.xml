@@ -32,6 +32,9 @@
                     <value name="S1">
                         <block type="robBrick_touch" id="2" intask="true"/>
                     </value>
+                    <value name="S4">
+                        <block type="robBrick_light" id="3" intask="true"/>
+                    </value>
                     <value name="MA">
                         <block type="robBrick_motor_big" id="6" intask="true">
                             <field name="MOTOR_REGULATION">TRUE</field>

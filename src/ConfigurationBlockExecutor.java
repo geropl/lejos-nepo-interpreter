@@ -7,6 +7,16 @@ import java.util.*;
  * the robot hardware configuration.
  */
 public class ConfigurationBlockExecutor {
+
+    public static RobotConfiguration parseConfigFromProgram(IXMLElement program) throws ConfigurationException {
+        IXMLElement config = program.findElement("config");
+        if (config == null) {
+            throw new IllegalArgumentException("Cannot find config element!");
+        }
+
+        ConfigurationBlockExecutor executor = new ConfigurationBlockExecutor();
+        return executor.parseConfiguration(config);
+    }
     
     /**
      * Parse configuration from XML config element and build RobotConfiguration.
@@ -26,8 +36,8 @@ public class ConfigurationBlockExecutor {
             throw new IllegalArgumentException("Expected config element, got: " + configRoot.getTagName());
         }
         
-        // Navigate to main brick block: config → robBrick_EV3-Brick
-        IXMLElement brickBlock = configRoot.findElement("robBrick_EV3-Brick");
+        // Navigate to main brick block: find block with type="robBrick_EV3-Brick"
+        IXMLElement brickBlock = configRoot.findElementByTypeAttr("robBrick_EV3-Brick");
         if (brickBlock == null) {
             throw new ConfigurationException("No robBrick_EV3-Brick block found in config section");
         }
@@ -35,16 +45,6 @@ public class ConfigurationBlockExecutor {
         // Parse the main brick block
         return parseMainBrickBlock(brickBlock);
     }
-    
-
-    
-
-    
-
-    
-
-    
-
     
     /**
      * Parse the main robBrick_EV3-Brick block for wheel/track settings and ports.

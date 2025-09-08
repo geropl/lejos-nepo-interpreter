@@ -395,6 +395,14 @@ public class ShallowXMLElement implements IXMLElement {
     }
     
     /**
+     * Find element by type attribute value recursively within this element's tree.
+     * Uses the static utility implementation from IXMLElement interface.
+     */
+    public IXMLElement findElementByTypeAttr(String typeValue) {
+        return IXMLElement.findElementByTypeAttrImpl(this, typeValue);
+    }
+    
+    /**
      * Memory footprint estimation
      */
     public int getMemoryFootprint() {

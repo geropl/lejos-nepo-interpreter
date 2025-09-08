@@ -35,9 +35,8 @@ public class NepoBlockExecutor {
         robotConfig = configExecutor.createDefaultConfiguration();
     }
 
-    public void setConfiguration(IXMLElement configElement) {
+    public void setConfiguration(IXMLElement configElement) throws ConfigurationException {
         robotConfig = configExecutor.parseConfiguration(configElement);
-        System.out.println("Configuration set. Motors: " + (robotConfig.hasMotor("A") ? "A " : "") + (robotConfig.hasMotor("C") ? "C " : ""));
     }
     
     public RobotConfiguration getConfiguration() {
@@ -118,12 +117,6 @@ public class NepoBlockExecutor {
                 executeMotorDiffTurnForBlock(block);
             } else {
                 System.out.println("Unknown block type: " + blockType);
-            }
-
-            // Execute next block in sequence
-            IXMLElement nextBlock = getNextBlock(block);
-            if (nextBlock != null) {
-                executeBlock(nextBlock);
             }
 
         } catch (Exception e) {
@@ -405,17 +398,6 @@ public class NepoBlockExecutor {
             if (nameAttr != null && statementName.equals(nameAttr.toString())) {
                 return statement.getChild("block");
             }
-        }
-        return null;
-    }
-
-    /**
-     * Get next block in sequence
-     */
-    private IXMLElement getNextBlock(IXMLElement block) {
-        IXMLElement next = block.getChild("next");
-        if (next != null) {
-            return next.getChild("block");
         }
         return null;
     }

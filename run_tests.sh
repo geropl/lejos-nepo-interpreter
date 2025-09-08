@@ -69,15 +69,19 @@ done
 if [ "$CLEAN" = true ]; then
     echo "🧹 Cleaning build artifacts..."
     rm -rf test/build/*
+    # Also clean any class files in src directory
+    find src -name "*.class" -delete 2>/dev/null || true
+    # Clean any class files in test directories
+    find test -name "*.class" -delete 2>/dev/null || true
     echo ""
 fi
 
 # Create test build directory
 mkdir -p test/build
 
-# Compile core source files (only XML-related files that don't depend on leJOS)
+# Compile core source files (XML, configuration, and executor files needed for tests)
 echo "📦 Compiling core source files..."
-CORE_FILES="src/IString.java src/ShallowString.java src/IXMLElement.java src/ShallowXMLElement.java src/IXMLParser.java src/ShallowXMLParser.java"
+CORE_FILES="src/IString.java src/ShallowString.java src/IXMLElement.java src/ShallowXMLElement.java src/IXMLParser.java src/ShallowXMLParser.java src/ConfigurationBlockExecutor.java src/ConfigurationException.java src/RobotConfiguration.java src/NepoBlockExecutor.java src/IHardware.java src/IMotor.java src/ISensor.java"
 
 if [ "$VERBOSE" = true ]; then
     javac -cp src -d test/build $CORE_FILES

@@ -4,13 +4,24 @@ import java.util.*;
  * Mock hardware implementation for testing
  * 
  * Provides a test implementation that records all hardware interactions
- * without requiring actual NXT hardware.
+ * without requiring actual NXT hardware. Validates that only configured
+ * motors and sensors are accessed.
  */
 public class MockHardware implements IHardware {
     
     private List<String> log = new ArrayList<>();
     private Map<String, MockMotor> motors = new HashMap<>();
     private Map<String, MockSensor> sensors = new HashMap<>();
+    private RobotConfiguration config;
+    
+    /**
+     * Create MockHardware with robot configuration for validation.
+     * 
+     * @param config Robot configuration defining available motors and sensors
+     */
+    public MockHardware(RobotConfiguration config) {
+        this.config = config;
+    }
 
     @Override
     public void clearDisplay() {
@@ -30,6 +41,13 @@ public class MockHardware implements IHardware {
     @Override
     public IMotor getMotor(String port) {
         log.add("getMotor('" + port + "')");
+        
+        // Validate motor is configured
+        if (config != null && !config.hasMotor(port)) {
+            throw new IllegalArgumentException("Motor not configured on port: " + port + 
+                ". Available motor ports: [" + this.getMotorPortsList() + "]");
+        }
+        
         if (!motors.containsKey(port)) {
             motors.put(port, new MockMotor(port));
         }
@@ -39,11 +57,52 @@ public class MockHardware implements IHardware {
     @Override
     public ISensor getSensor(String port, String type) {
         log.add("getSensor('" + port + "', '" + type + "')");
+        
+        // Validate sensor is configured
+        if (config != null && !config.hasSensor(port)) {
+            throw new IllegalArgumentException("Sensor not configured on port: " + port + 
+                ". Available sensor ports: [" + this.getSensorPortsList() + "]");
+        }
+        
         String key = port + "_" + type;
         if (!sensors.containsKey(key)) {
             sensors.put(key, new MockSensor(port, type));
         }
         return sensors.get(key);
+    }
+    
+    /**
+     * Get a readable list of configured motor ports
+     */
+    public String getMotorPortsList() {
+        if (this.config == null) return "";
+
+        StringBuilder sb = new StringBuilder();
+        Enumeration motorPorts = this.config.getMotorPorts();
+        boolean first = true;
+        while (motorPorts.hasMoreElements()) {
+            if (!first) sb.append(", ");
+            sb.append(motorPorts.nextElement());
+            first = false;
+        }
+        return sb.toString();
+    }
+    
+    /**
+     * Get a readable list of configured sensor ports
+     */
+    public String getSensorPortsList() {
+        if (this.config == null) return "";
+
+        StringBuilder sb = new StringBuilder();
+        Enumeration sensorPorts = this.config.getSensorPorts();
+        boolean first = true;
+        while (sensorPorts.hasMoreElements()) {
+            if (!first) sb.append(", ");
+            sb.append(sensorPorts.nextElement());
+            first = false;
+        }
+        return sb.toString();
     }
 
     @Override

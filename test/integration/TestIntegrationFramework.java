@@ -61,7 +61,7 @@ public class TestIntegrationFramework {
             
         new TestCase("obstacle_avoidance", "dynamic_test.xml",
             new DynamicTestScenario()
-                .atIteration(5).setDistanceSensor(3, 10.0)),
+                .atIteration(5).setTouchSensor(1, true)),
             
         new TestCase("light_following", "dynamic_test.xml",
             new DynamicTestScenario()
@@ -71,9 +71,9 @@ public class TestIntegrationFramework {
         // Custom complex scenario
         new TestCase("complex_navigation", "dynamic_test.xml",
             new DynamicTestScenario()
-                .atIteration(2).setDistanceSensor(3, 80.0)
+                .atIteration(2).setTouchSensor(1, true)
                 .atIteration(4).setLightSensor(4, 25.0)
-                .atIteration(6).setTouchSensor(1, true)),
+                .atIteration(6).setTouchSensor(1, false)),
                 
         // Multiple tests for same program
         new TestCase("normal_run", "dynamic_test.xml"),
@@ -193,8 +193,8 @@ public class TestIntegrationFramework {
         
         // Parse XML
         ShallowXMLParser parser = new ShallowXMLParser();
-        IXMLElement root = parser.parseXML(xmlContent);
-        if (root == null) {
+        IXMLElement program = parser.parseXML(xmlContent);
+        if (program == null) {
             throw new Exception("Failed to parse XML");
         }
         
@@ -207,11 +207,13 @@ public class TestIntegrationFramework {
         } else {
             scenarios = new ArrayList<SensorScenario>();
         }
-        MockHardware mockHardware = new MockHardware();
+        // Parse configuration first to create properly configured MockHardware
+        RobotConfiguration robotConfig = ConfigurationBlockExecutor.parseConfigFromProgram(program);
+        MockHardware mockHardware = new MockHardware(robotConfig);
         NepoBlockExecutor executor = new TestNepoBlockExecutor(mockHardware, scenarios);
-        
+
         // Run the complete program (handles config and program sections)
-        executor.runProgram(root);
+        executor.runProgram(program);
         
         // Get the hardware interaction log
         List<String> log = mockHardware.getLog();
