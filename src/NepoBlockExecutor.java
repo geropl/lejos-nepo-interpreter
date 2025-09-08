@@ -45,6 +45,45 @@ public class NepoBlockExecutor {
     }
     
     /**
+     * Run a complete NEPO program from XML root element.
+     * Handles configuration parsing and program execution.
+     * 
+     * @param xmlRoot The root XML element containing config and program sections
+     * @throws Exception if no program section is found
+     */
+    public void runProgram(IXMLElement xmlRoot) throws Exception {
+        // Find and set configuration if present
+        IXMLElement config = xmlRoot.findElement("config");
+        if (config != null) {
+            setConfiguration(config);
+        }
+        
+        // Find program section
+        IXMLElement program = xmlRoot.findElement("program");
+        if (program == null) {
+            throw new Exception("No program section found in XML");
+        }
+        
+        executeProgram(program);
+    }
+
+    /**
+     * Execute a complete program - finds instance and executes all blocks in sequence
+     */
+    private void executeProgram(IXMLElement program) {
+        // Find instance
+        IXMLElement instance = program.findElement("instance");
+        if (instance == null) return;
+        
+        // Execute all blocks in the instance in order
+        Vector blocks = instance.getChildren("block");
+        for (int i = 0; i < blocks.size(); i++) {
+            IXMLElement block = (IXMLElement) blocks.elementAt(i);
+            executeBlock(block);
+        }
+    }
+    
+    /**
      * Execute a block based on its type and parameters
      * 
      * Can be called with:
@@ -65,8 +104,6 @@ public class NepoBlockExecutor {
             return;
         }
         String blockType = blockTypeAttr.toString();
-
-
         try {
             
             if ("robControls_start".equals(blockType)) {
@@ -92,26 +129,6 @@ public class NepoBlockExecutor {
         } catch (Exception e) {
             System.err.println("Error executing block " + blockType + ": " + e.getMessage());
             e.printStackTrace();
-        }
-    }
-
-    /**
-     * Execute a complete program - finds instance and executes all blocks in sequence
-     */
-    private void executeProgram(IXMLElement program) {
-        // Find block_set
-        IXMLElement blockSet = program.getChild("block_set");
-        if (blockSet == null) return;
-        
-        // Find instance
-        IXMLElement instance = blockSet.getChild("instance");
-        if (instance == null) return;
-        
-        // Execute all blocks in the instance in order
-        Vector blocks = instance.getChildren("block");
-        for (int i = 0; i < blocks.size(); i++) {
-            IXMLElement block = (IXMLElement) blocks.elementAt(i);
-            executeBlock(block);
         }
     }
     

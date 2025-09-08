@@ -84,7 +84,6 @@ public class TestIntegrationFramework {
     
     private static final String CASES_DIR = "test/integration/cases";
     private static final String GOLDEN_EXTENSION = ".golden";
-    private static final String XML_EXTENSION = ".xml";
     
     private static int totalTests = 0;
     private static int passedTests = 0;
@@ -211,19 +210,8 @@ public class TestIntegrationFramework {
         MockHardware mockHardware = new MockHardware();
         NepoBlockExecutor executor = new TestNepoBlockExecutor(mockHardware, scenarios);
         
-        // Find and set configuration if present
-        IXMLElement config = findElement(root, "config");
-        if (config != null) {
-            executor.setConfiguration(config);
-        }
-        
-        // Find program section
-        IXMLElement program = findElement(root, "program");
-        if (program == null) {
-            throw new Exception("No program section found in XML");
-        }
-        
-        executor.executeBlock(program);
+        // Run the complete program (handles config and program sections)
+        executor.runProgram(root);
         
         // Get the hardware interaction log
         List<String> log = mockHardware.getLog();
@@ -240,24 +228,6 @@ public class TestIntegrationFramework {
         }
         
         return output.toString();
-    }
-    
-    /**
-     * Find element by tag name
-     */
-    private static IXMLElement findElement(IXMLElement parent, String tagName) {
-        if (tagName.equals(parent.getTagName())) {
-            return parent;
-        }
-        
-        Vector<IXMLElement> children = parent.getAllChildren();
-        for (int i = 0; i < children.size(); i++) {
-            IXMLElement found = findElement(children.elementAt(i), tagName);
-            if (found != null) {
-                return found;
-            }
-        }
-        return null;
     }
     
     /**

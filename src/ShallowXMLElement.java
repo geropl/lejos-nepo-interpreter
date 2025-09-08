@@ -387,6 +387,14 @@ public class ShallowXMLElement implements IXMLElement {
     }
     
     /**
+     * Find element by tag name recursively within this element's tree.
+     * Uses the static utility implementation from IXMLElement interface.
+     */
+    public IXMLElement findElement(String tagName) {
+        return IXMLElement.findElementImpl(this, tagName);
+    }
+    
+    /**
      * Memory footprint estimation
      */
     public int getMemoryFootprint() {

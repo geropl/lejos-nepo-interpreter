@@ -135,10 +135,10 @@ run_tests_in_dir() {
         # Run only TestIntegrationFramework
         echo "   Running TestIntegrationFramework..."
         if [ "$VERBOSE" = true ]; then
-            java -cp "src:test:test/build" "TestIntegrationFramework"
+            java -cp "test/build:src:test" "TestIntegrationFramework"
             local exit_code=$?
         else
-            java -cp "src:test:test/build" "TestIntegrationFramework" >/dev/null 2>&1
+            java -cp "test/build:src:test" "TestIntegrationFramework" >/dev/null 2>&1
             local exit_code=$?
         fi
         
