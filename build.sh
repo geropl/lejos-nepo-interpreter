@@ -10,8 +10,10 @@
 set -e  # Exit on any error
 
 DEBUG_MODE=false
+TARGET="target/default"
 if [ "$1" = "debug" ]; then
     DEBUG_MODE=true
+    TARGET="target/debug"
     echo "=========================================="
     echo "Building NEPO NXT Interpreter (DEBUG)"
     echo "=========================================="
@@ -64,8 +66,8 @@ java -version
 # Create build directories
 echo ""
 echo "Setting up build environment..."
-rm -rf build target
-mkdir -p build target
+rm -rf build $TARGET
+mkdir -p build $TARGET
 
 echo "✓ Build directory created"
 
@@ -73,12 +75,19 @@ echo "✓ Build directory created"
 echo ""
 echo "Checking source files..."
 REQUIRED_FILES=(
+    "src/IString.java"
     "src/ShallowString.java"
+    "src/IXMLElement.java"
     "src/ShallowXMLElement.java"
+    "src/IXMLParser.java"
     "src/ShallowXMLParser.java"
+    "src/IHardware.java"
+    "src/ISensor.java"
+    "src/IMotor.java"
+    "src/NXTHardware.java"
     "src/RobotConfiguration.java"
-    "src/NepoBlockExecutor.java"
     "src/ConfigurationBlockExecutor.java"
+    "src/NepoBlockExecutor.java"
     "src/CrashLogger.java"
     "src/FilePicker.java"
     "src/AdvancedFilePicker.java"
@@ -94,29 +103,33 @@ for file in "${REQUIRED_FILES[@]}"; do
 done
 
 echo ""
-echo "Compiling utility classes first..."
+echo "Compiling core components in dependency order..."
 
-echo "  → CrashLogger.java"
-nxjc -cp . -d build src/CrashLogger.java || { echo "ERROR: Failed to compile CrashLogger.java"; exit 1; }
-
-echo ""
-echo "Compiling core components..."
-
-# Compile in dependency order with error checking
+# Compile interfaces first (in dependency order)
 echo "  → IString.java"
 nxjc -cp .:build -d build src/IString.java || { echo "ERROR: Failed to compile IString.java"; exit 1; }
-
-echo "  → ShallowString.java"
-nxjc -cp .:build -d build src/ShallowString.java || { echo "ERROR: Failed to compile ShallowString.java"; exit 1; }
 
 echo "  → IXMLElement.java"
 nxjc -cp .:build -d build src/IXMLElement.java || { echo "ERROR: Failed to compile IXMLElement.java"; exit 1; }
 
-echo "  → ShallowXMLElement.java"
-nxjc -cp .:build -d build src/ShallowXMLElement.java || { echo "ERROR: Failed to compile ShallowXMLElement.java"; exit 1; }
-
 echo "  → IXMLParser.java"
 nxjc -cp .:build -d build src/IXMLParser.java || { echo "ERROR: Failed to compile IXMLParser.java"; exit 1; }
+
+echo "  → ISensor.java"
+nxjc -cp .:build -d build src/ISensor.java || { echo "ERROR: Failed to compile ISensor.java"; exit 1; }
+
+echo "  → IMotor.java"
+nxjc -cp .:build -d build src/IMotor.java || { echo "ERROR: Failed to compile IMotor.java"; exit 1; }
+
+echo "  → IHardware.java"
+nxjc -cp .:build -d build src/IHardware.java || { echo "ERROR: Failed to compile IHardware.java"; exit 1; }
+
+# Compile implementations
+echo "  → ShallowString.java"
+nxjc -cp .:build -d build src/ShallowString.java || { echo "ERROR: Failed to compile ShallowString.java"; exit 1; }
+
+echo "  → ShallowXMLElement.java"
+nxjc -cp .:build -d build src/ShallowXMLElement.java || { echo "ERROR: Failed to compile ShallowXMLElement.java"; exit 1; }
 
 echo "  → ShallowXMLParser.java"
 nxjc -cp .:build -d build src/ShallowXMLParser.java || { echo "ERROR: Failed to compile ShallowXMLParser.java"; exit 1; }
@@ -127,8 +140,14 @@ nxjc -cp .:build -d build src/RobotConfiguration.java || { echo "ERROR: Failed t
 echo "  → ConfigurationBlockExecutor.java"
 nxjc -cp .:build -d build src/ConfigurationBlockExecutor.java || { echo "ERROR: Failed to compile ConfigurationBlockExecutor.java"; exit 1; }
 
+echo "  → NXTHardware.java"
+nxjc -cp .:build -d build src/NXTHardware.java || { echo "ERROR: Failed to compile NXTHardware.java"; exit 1; }
+
 echo "  → NepoBlockExecutor.java"
 nxjc -cp .:build -d build src/NepoBlockExecutor.java || { echo "ERROR: Failed to compile NepoBlockExecutor.java"; exit 1; }
+
+echo "  → CrashLogger.java"
+nxjc -cp .:build -d build src/CrashLogger.java || { echo "ERROR: Failed to compile CrashLogger.java"; exit 1; }
 
 echo ""
 echo "Compiling file picker components..."
@@ -154,36 +173,16 @@ if [ "$DEBUG_MODE" = true ]; then
     
     # Create dynamic version with debug info
     echo "  → Creating NepoInterpreter.nxj (DEBUG)"
-    nxjlink -cp build -o target/NepoInterpreter.nxj -od target/NepoInterpreter.nxd -g -gr DynamicNepoRunner || { echo "ERROR: Failed to create NepoInterpreter.nxj"; exit 1; }
+    nxjlink -cp build -o $TARGET/NepoInterpreter.nxj -od $TARGET/NepoInterpreter.nxd -g -gr DynamicNepoRunner || { echo "ERROR: Failed to create NepoInterpreter.nxj"; exit 1; }
     
     echo "✓ Debug info file created:"
-    echo "  → target/NepoInterpreter.nxd"
+    echo "  → $TARGET/NepoInterpreter.nxd"
 else
     echo "🏭 Creating PRODUCTION build..."
     
     # Create dynamic version with file picker
     echo "  → Creating NepoInterpreter.nxj"
-    nxjlink -cp build -o target/NepoInterpreter.nxj DynamicNepoRunner || { echo "ERROR: Failed to create NepoInterpreter.nxj"; exit 1; }
-fi
-
-echo ""
-echo "Verifying generated files..."
-if [ -f "target/NepoInterpreter.nxj" ]; then
-    echo "✓ target/NepoInterpreter.nxj ($(du -h target/NepoInterpreter.nxj | cut -f1))"
-else
-    echo "✗ target/NepoInterpreter.nxj not created"
-    exit 1
-fi
-
-# Check for sample programs
-echo ""
-echo "Checking sample programs..."
-if [ -d "sample_programs" ]; then
-    SAMPLE_COUNT=$(find sample_programs -name "*.xml" | wc -l)
-    echo "✓ Found $SAMPLE_COUNT sample XML programs"
-    find sample_programs -name "*.xml" -exec echo "  → {}" \;
-else
-    echo "⚠ No sample_programs directory found"
+    nxjlink -cp build -o $TARGET/NepoInterpreter.nxj DynamicNepoRunner || { echo "ERROR: Failed to create NepoInterpreter.nxj"; exit 1; }
 fi
 
 echo ""
@@ -192,15 +191,15 @@ echo "BUILD SUCCESSFUL!"
 echo "=========================================="
 echo ""
 echo "Generated files:"
-echo "  target/NepoInterpreter.nxj - NEPO interpreter with dynamic file selection and crash logging"
+echo "  $TARGET/NepoInterpreter.nxj - NEPO interpreter with dynamic file selection and crash logging"
 
 if [ "$DEBUG_MODE" = true ]; then
-    echo "  target/NepoInterpreter.nxd - Debug info for remote console"
+    echo "  $TARGET/NepoInterpreter.nxd - Debug info for remote console"
 fi
 
 echo ""
 echo "To upload to NXT:"
-echo "  nxjupload target/NepoInterpreter.nxj"
+echo "  nxjupload $TARGET/NepoInterpreter.nxj"
 echo ""
 
 if [ "$DEBUG_MODE" = true ]; then
@@ -208,7 +207,7 @@ if [ "$DEBUG_MODE" = true ]; then
     echo "1. Upload the .nxj file to NXT"
     echo "2. Upload XML programs (any size - no artificial limits)"
     echo "3. Start remote console for debugging:"
-    echo "   nxjconsole -di target/NepoInterpreter.nxd"
+    echo "   nxjconsole -di $TARGET/NepoInterpreter.nxd"
     echo "4. Run the program on NXT: Files → NepoInterpreter"
     echo "5. View detailed debugging info on PC console"
     echo ""
