@@ -38,7 +38,7 @@ public interface IXMLElement {
     static IXMLElement findElementImpl(IXMLElement parent, String tagName) {
         // Use a queue for breadth-first search
         Vector<IXMLElement> queue = new Vector<>();
-        queue.add(parent);
+        queue.addElement(parent);
         
         while (!queue.isEmpty()) {
             IXMLElement current = queue.elementAt(0);
@@ -52,7 +52,7 @@ public interface IXMLElement {
             // Add all children to the queue for next level processing
             Vector<IXMLElement> children = current.getAllChildren();
             for (int i = 0; i < children.size(); i++) {
-                queue.add(children.elementAt(i));
+                queue.addElement(children.elementAt(i));
             }
         }
         
@@ -69,7 +69,7 @@ public interface IXMLElement {
      */
     static IXMLElement findElementByTypeAttrImpl(IXMLElement parent, String typeValue) {
         Vector<IXMLElement> queue = new Vector<>();
-        queue.add(parent);
+        queue.addElement(parent);
         
         while (!queue.isEmpty()) {
             IXMLElement current = queue.elementAt(0);
@@ -84,7 +84,7 @@ public interface IXMLElement {
             // Add all children to the queue for next level processing
             Vector<IXMLElement> children = current.getAllChildren();
             for (int i = 0; i < children.size(); i++) {
-                queue.add(children.elementAt(i));
+                queue.addElement(children.elementAt(i));
             }
         }
         

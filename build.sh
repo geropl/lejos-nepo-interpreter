@@ -85,6 +85,7 @@ REQUIRED_FILES=(
     "src/ISensor.java"
     "src/IMotor.java"
     "src/NXTHardware.java"
+    "src/ConfigurationException.java"
     "src/RobotConfiguration.java"
     "src/ConfigurationBlockExecutor.java"
     "src/NepoBlockExecutor.java"
@@ -133,6 +134,9 @@ nxjc -cp .:build -d build src/ShallowXMLElement.java || { echo "ERROR: Failed to
 
 echo "  → ShallowXMLParser.java"
 nxjc -cp .:build -d build src/ShallowXMLParser.java || { echo "ERROR: Failed to compile ShallowXMLParser.java"; exit 1; }
+
+echo "  → ConfigurationException.java"
+nxjc -cp .:build -d build src/ConfigurationException.java || { echo "ERROR: Failed to compile ConfigurationException.java"; exit 1; }
 
 echo "  → RobotConfiguration.java"
 nxjc -cp .:build -d build src/RobotConfiguration.java || { echo "ERROR: Failed to compile RobotConfiguration.java"; exit 1; }

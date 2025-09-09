@@ -86,8 +86,8 @@ public class DynamicNepoRunner {
         LCD.refresh();
         
         // Parse the XML program using ShallowXMLParser
-        IXMLElement root = new ShallowXMLParser().parseFile(filename);
-        if (root == null) {
+        IXMLElement program = new ShallowXMLParser().parseFile(filename);
+        if (program == null) {
             showError("Failed to parse XML file");
             return;
         }
@@ -95,20 +95,13 @@ public class DynamicNepoRunner {
         LCD.drawString("XML parsed OK", 0, 4);
         LCD.refresh();
         Delay.msDelay(1000);
-        
-        // Find the start block
-        IXMLElement startBlock = findStartBlock(root);
-        if (startBlock == null) {
-            showError("No start block found in program");
-            return;
-        }
 
-        LCD.drawString("Start block found", 0, 5);
+        LCD.drawString("Starting...", 0, 5);
         LCD.refresh();
         Delay.msDelay(1000);
         
         // Create executor and run program
-        NepoBlockExecutor executor = new NepoBlockExecutor();
+        NepoBlockExecutor executor = new NepoBlockExecutor(new NXTHardware());
         
         LCD.clear();
         LCD.drawString("Running:", 0, 0);
@@ -118,57 +111,18 @@ public class DynamicNepoRunner {
         LCD.drawString("to stop", 0, 7);
         LCD.refresh();
         
-        executor.executeBlock(startBlock);
-        
-        LCD.clear();
-        LCD.drawString("Program", 0, 2);
-        LCD.drawString("completed", 0, 3);
-        LCD.drawString("successfully", 0, 4);
-        LCD.refresh();
-        Delay.msDelay(2000);
-    }
-    
-    /**
-     * Find the start block in the XML structure
-     */
-    private static IXMLElement findStartBlock(IXMLElement root) {
-        // Look for blockSet -> instance -> block with type="robControls_start"
-        IXMLElement instance = root.getChild("instance");
-        if (instance != null) {
-            IXMLElement block = instance.getChild("block");
-            if (block != null) {
-                IString typeAttr = block.getAttribute("type");
-                if (typeAttr != null && "robControls_start".equals(typeAttr.toString())) {
-                    return block;
-                }
-            }
+        try {
+            executor.runProgram(program);
+            
+            LCD.clear();
+            LCD.drawString("Program", 0, 2);
+            LCD.drawString("completed", 0, 3);
+            LCD.drawString("successfully", 0, 4);
+            LCD.refresh();
+            Delay.msDelay(2000);
+        } catch (Exception e) {
+            showError("Execution error: " + e.getMessage());
         }
-        
-        // Alternative: search all blocks recursively
-        return findBlockByType(root, "robControls_start");
-    }
-    
-    /**
-     * Recursively find a block by type
-     */
-    private static IXMLElement findBlockByType(IXMLElement element, String blockType) {
-        if ("block".equals(element.getTagName())) {
-            IString typeAttr = element.getAttribute("type");
-            if (typeAttr != null && blockType.equals(typeAttr.toString())) {
-                return element;
-            }
-        }
-        
-        Vector<IXMLElement> children = element.getAllChildren();
-        for (int i = 0; i < children.size(); i++) {
-            IXMLElement child = children.elementAt(i);
-            IXMLElement result = findBlockByType(child, blockType);
-            if (result != null) {
-                return result;
-            }
-        }
-        
-        return null;
     }
 
     /**
