@@ -21,8 +21,15 @@ public class NepoBlockExecutor {
     /**
      * Get the running state for subclasses.
      */
-    protected boolean isRunning() {
+    public boolean isRunning() {
         return running;
+    }
+    
+    /**
+     * Set the running state for subclasses.
+     */
+    protected void setRunning(boolean running) {
+        this.running = running;
     }
     
     private RobotConfiguration robotConfig;
@@ -135,50 +142,30 @@ public class NepoBlockExecutor {
     /**
      * Execute loop forever block
      */
-    protected void executeLoopForeverBlock(IXMLElement block) {
-        IXMLElement doBlock = getStatementBlock(block, "DO");
-        int iterations = 0;
-        Integer maxIterations = getMaxIterations();
+    protected void executeLoopForeverBlock(IXMLElement loop) {
+        IXMLElement doStatement = loop.getChild("statement");
+        if (!doStatement.getAttribute("name").equals("DO")) {
+            throw new RuntimeException("only DO statements supported in loops");
+        }
+        Vector<IXMLElement> blocks = doStatement.getChildren("block");
         
-        while (running && (maxIterations == null || iterations < maxIterations.intValue())) {
-            if (doBlock != null) {
-                executeBlock(doBlock);
+        while (this.running) {
+            for (int i = 0; i < blocks.size(); i++) {
+                IXMLElement block = blocks.elementAt(i);
+                executeBlock(block);
             }
             
             // Call hook after block execution
-            onIteration(iterations);
-            iterations++;
+            this.onIteration();
         }
     }
     
     /**
      * Hook called after each loop iteration.
      * Subclasses can override to implement custom iteration logic.
-     * 
-     * @param iterationNumber Current iteration (0-based)
      */
-    protected void onIteration(int iterationNumber) {
+    protected void onIteration() {
         // Default: no-op
-    }
-    
-    /**
-     * Hook to determine maximum iterations for loops.
-     * Subclasses can override to implement custom limits.
-     * 
-     * @return Maximum number of iterations (default: null = unlimited)
-     */
-    protected Integer getMaxIterations() {
-        return null;
-    }
-    
-    /**
-     * Hook to determine maximum wait time.
-     * Subclasses can override to implement custom limits.
-     * 
-     * @return Maximum wait time in ms (default: null = unlimited)
-     */
-    protected Integer getMaxWaitTime() {
-        return null;
     }
 
     /**
@@ -216,19 +203,19 @@ public class NepoBlockExecutor {
      */
     private void executeWaitBlock(IXMLElement block) {
         Object conditionValue = getValue(block, "WAIT0");
-        Integer maxWaitTime = this.getMaxWaitTime();
-        long startTime = System.currentTimeMillis();
         
-        while (running && (maxWaitTime == null || System.currentTimeMillis() - startTime < maxWaitTime)) {
+        while (this.running) {
             conditionValue = getValue(block, "WAIT0");
             if (conditionValue instanceof Boolean && ((Boolean) conditionValue).booleanValue()) {
                 break;
             }
-            try {
-                Thread.sleep(50); // Check every 50ms
-            } catch (InterruptedException e) {
-                break;
-            }
+            // try {
+            //     Thread.sleep(50); // Check every 50ms
+            // } catch (InterruptedException e) {
+            //     break;
+            // }
+
+            this.onIteration();
         }
     }
 

@@ -130,6 +130,10 @@ public class MockHardware implements IHardware {
 
     // Test helper methods
     public List<String> getLog() { return new ArrayList<>(log); }
+
+    public void log(String line) {
+        log.add(line);
+    }
     
     public void clearLog() {
         log.clear();

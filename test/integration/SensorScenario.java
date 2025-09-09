@@ -1,6 +1,6 @@
 /**
  * Interface for defining dynamic sensor behavior during test execution.
- * Scenarios can be triggered by iteration count, elapsed time, or other conditions.
+ * Scenarios can be triggered by iteration count or other conditions.
  */
 public interface SensorScenario {
     

@@ -20,16 +20,24 @@ public class TestIntegrationFramework {
         public final String name;
         public final String programFile;
         public final DynamicTestScenario scenario;
+        public final int maxIterations;
         
         public TestCase(String name, String programFile) {
-            this.name = name;
-            this.programFile = programFile;
-            this.scenario = new DynamicTestScenario(); // Empty scenario
+            this(name, programFile, new DynamicTestScenario());
+        }
+        
+        public TestCase(String name, String programFile, int maxIterations) {
+            this(name, programFile, maxIterations, new DynamicTestScenario());
         }
         
         public TestCase(String name, String programFile, DynamicTestScenario scenario) {
+            this(name, programFile, 10, scenario);
+        }
+        
+        public TestCase(String name, String programFile, int maxIterations, DynamicTestScenario scenario) {
             this.name = name;
             this.programFile = programFile;
+            this.maxIterations = maxIterations;
             this.scenario = scenario;
         }
 
@@ -52,7 +60,10 @@ public class TestIntegrationFramework {
     // Static array of all test cases (like TestXMLParser pattern)
     private static final TestCase[] TEST_CASES = {
         // Basic tests (no scenarios)
-        new TestCase("basic", "programm1.xml"),
+        new TestCase("basic", "programm1.xml", 10),
+
+        // Basic tests (no scenarios)
+        new TestCase("hits_dark", "programm1.xml", 20, new DynamicTestScenario().atIteration(3).setLightSensor(4, 40).atIteration(4).setLightSensor(4, 80)),
         
         // Scenario-based tests using the same program with different conditions
         new TestCase("collision", "dynamic_test.xml", 
@@ -210,7 +221,8 @@ public class TestIntegrationFramework {
         // Parse configuration first to create properly configured MockHardware
         RobotConfiguration robotConfig = ConfigurationBlockExecutor.parseConfigFromProgram(program);
         MockHardware mockHardware = new MockHardware(robotConfig);
-        NepoBlockExecutor executor = new TestNepoBlockExecutor(mockHardware, scenarios);
+        TestNepoBlockExecutor executor = new TestNepoBlockExecutor(mockHardware, scenarios);
+        executor.setMaxTotalIterations(testCase.maxIterations);
 
         // Run the complete program (handles config and program sections)
         executor.runProgram(program);

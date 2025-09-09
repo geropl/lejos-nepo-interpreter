@@ -8,6 +8,7 @@ public class TestNepoBlockExecutor extends NepoBlockExecutor {
     private ExecutionContext context;
     private List<SensorScenario> scenarios;
     private MockHardware mockHardware;
+    private int maxTotalIterations = 20; // Default configurable limit
     
     /**
      * Create a test executor with mock hardware.
@@ -37,11 +38,28 @@ public class TestNepoBlockExecutor extends NepoBlockExecutor {
     /**
      * Hook called after each loop iteration.
      * Updates execution context and applies scenarios.
+     * Sets running to false if total iteration limit is exceeded.
      */
     @Override
-    protected void onIteration(int iterationNumber) {
+    public void onIteration() {
+        if (!this.isRunning()) {
+            // Might happen on closing upper loops etc.
+            return;
+        }
+
         // Update execution context
         context.incrementIteration();
+        
+        // Check if we've exceeded the total iteration limit
+        int currentIteration = this.context.getCurrentIteration();
+        if (currentIteration >= maxTotalIterations) {
+            mockHardware.log("[ITERATION LIMIT] Test stopped after " + currentIteration + 
+                   " iterations (limit: " + maxTotalIterations + ")");
+            
+            // Stop execution by setting running flag to false
+            this.setRunning(false);
+            return;
+        }
         
         // Apply scenarios that should trigger at this iteration
         for (SensorScenario scenario : scenarios) {
@@ -49,34 +67,10 @@ public class TestNepoBlockExecutor extends NepoBlockExecutor {
                 scenario.applySensorChanges(mockHardware);
                 
                 // Log scenario application
-                List<String> log = mockHardware.getLog();
-                log.add("[Iteration " + (iterationNumber + 1) + "] Scenario applied: " + 
+                mockHardware.log("[Iteration " + currentIteration + "] Scenario applied: " + 
                         scenario.getDescription());
             }
         }
-    }
-    
-    /**
-     * Hook to determine maximum iterations based on scenarios.
-     * Calculates the maximum iteration needed plus a buffer.
-     */
-    @Override
-    protected Integer getMaxIterations() {
-        if (scenarios.isEmpty()) {
-            return Integer.valueOf(10); // Default for tests without scenarios
-        }
-        
-        // Find the highest iteration number in scenarios
-        int maxScenarioIteration = 0;
-        for (SensorScenario scenario : scenarios) {
-            if (scenario instanceof IterationBasedScenario) {
-                int target = ((IterationBasedScenario) scenario).getTargetIteration();
-                maxScenarioIteration = Math.max(maxScenarioIteration, target);
-            }
-        }
-        
-        // Add buffer iterations after last scenario
-        return Integer.valueOf(Math.max(10, maxScenarioIteration + 3));
     }
     
     /**
@@ -125,12 +119,23 @@ public class TestNepoBlockExecutor extends NepoBlockExecutor {
     }
     
     /**
-     * Public method for testing iteration logic.
-     * Calls the protected onIteration method.
+     * Set the maximum total iterations allowed across all loops.
      * 
-     * @param iterationNumber Iteration number to simulate
+     * @param maxTotalIterations Maximum total iterations (must be positive)
      */
-    public void simulateIteration(int iterationNumber) {
-        onIteration(iterationNumber);
+    public void setMaxTotalIterations(int maxTotalIterations) {
+        if (maxTotalIterations <= 0) {
+            throw new IllegalArgumentException("Maximum total iterations must be positive");
+        }
+        this.maxTotalIterations = maxTotalIterations;
+    }
+    
+    /**
+     * Get the current maximum total iterations limit.
+     * 
+     * @return Maximum total iterations
+     */
+    public int getMaxTotalIterations() {
+        return maxTotalIterations;
     }
 }
