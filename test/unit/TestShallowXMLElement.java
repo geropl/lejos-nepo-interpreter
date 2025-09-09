@@ -2,6 +2,9 @@
  * Test to verify the centralized utility methods in ShallowXMLElement work correctly
  */
 public class TestShallowXMLElement {
+    private static int totalTests = 0;
+    private static int failedTests = 0;
+    
     public static void main(String[] args) {
         System.out.println("=== Testing ShallowXMLElement Utility Methods ===\n");
         
@@ -12,6 +15,14 @@ public class TestShallowXMLElement {
         testFindMatchingClosingTag();
         
         System.out.println("=== All ShallowXMLElement utility method tests completed ===");
+        
+        if (failedTests == 0) {
+            System.out.println("🎉 All tests passed!");
+            System.exit(0);
+        } else {
+            System.out.println("❌ " + failedTests + " out of " + totalTests + " tests failed");
+            System.exit(1);
+        }
     }
     
     private static void testExtractTagName() {
@@ -39,6 +50,8 @@ public class TestShallowXMLElement {
             String actual = ShallowXMLElement.extractTagName(inputStr);
             
             boolean passed = expected.equals(actual);
+            totalTests++;
+            if (!passed) failedTests++;
             System.out.println("  Input: " + input + " -> Expected: " + expected + ", Actual: " + actual + " " + (passed ? "✓" : "✗"));
         }
         System.out.println();
@@ -69,6 +82,8 @@ public class TestShallowXMLElement {
             int actual = ShallowXMLElement.findMatchingClosingTag(contentStr, tagName, startPos);
             
             boolean passed = (expected == actual);
+            totalTests++;
+            if (!passed) failedTests++;
             System.out.println("  Content: " + content);
             System.out.println("  Tag: " + tagName + ", Start: " + startPos + " -> Expected: " + expected + ", Actual: " + actual + " " + (passed ? "✓" : "✗"));
             System.out.println();

@@ -4,13 +4,24 @@ import java.util.*;
  * Mock hardware implementation for testing
  * 
  * Provides a test implementation that records all hardware interactions
- * without requiring actual NXT hardware.
+ * without requiring actual NXT hardware. Validates that only configured
+ * motors and sensors are accessed.
  */
 public class MockHardware implements IHardware {
     
     private List<String> log = new ArrayList<>();
     private Map<String, MockMotor> motors = new HashMap<>();
     private Map<String, MockSensor> sensors = new HashMap<>();
+    private RobotConfiguration config;
+    
+    /**
+     * Create MockHardware with robot configuration for validation.
+     * 
+     * @param config Robot configuration defining available motors and sensors
+     */
+    public MockHardware(RobotConfiguration config) {
+        this.config = config;
+    }
 
     @Override
     public void clearDisplay() {
@@ -30,6 +41,13 @@ public class MockHardware implements IHardware {
     @Override
     public IMotor getMotor(String port) {
         log.add("getMotor('" + port + "')");
+        
+        // Validate motor is configured
+        if (config != null && !config.hasMotor(port)) {
+            throw new IllegalArgumentException("Motor not configured on port: " + port + 
+                ". Available motor ports: [" + this.getMotorPortsList() + "]");
+        }
+        
         if (!motors.containsKey(port)) {
             motors.put(port, new MockMotor(port));
         }
@@ -39,11 +57,52 @@ public class MockHardware implements IHardware {
     @Override
     public ISensor getSensor(String port, String type) {
         log.add("getSensor('" + port + "', '" + type + "')");
+        
+        // Validate sensor is configured
+        if (config != null && !config.hasSensor(port)) {
+            throw new IllegalArgumentException("Sensor not configured on port: " + port + 
+                ". Available sensor ports: [" + this.getSensorPortsList() + "]");
+        }
+        
         String key = port + "_" + type;
         if (!sensors.containsKey(key)) {
             sensors.put(key, new MockSensor(port, type));
         }
         return sensors.get(key);
+    }
+    
+    /**
+     * Get a readable list of configured motor ports
+     */
+    public String getMotorPortsList() {
+        if (this.config == null) return "";
+
+        StringBuilder sb = new StringBuilder();
+        Enumeration motorPorts = this.config.getMotorPorts();
+        boolean first = true;
+        while (motorPorts.hasMoreElements()) {
+            if (!first) sb.append(", ");
+            sb.append(motorPorts.nextElement());
+            first = false;
+        }
+        return sb.toString();
+    }
+    
+    /**
+     * Get a readable list of configured sensor ports
+     */
+    public String getSensorPortsList() {
+        if (this.config == null) return "";
+
+        StringBuilder sb = new StringBuilder();
+        Enumeration sensorPorts = this.config.getSensorPorts();
+        boolean first = true;
+        while (sensorPorts.hasMoreElements()) {
+            if (!first) sb.append(", ");
+            sb.append(sensorPorts.nextElement());
+            first = false;
+        }
+        return sb.toString();
     }
 
     @Override
@@ -71,9 +130,74 @@ public class MockHardware implements IHardware {
 
     // Test helper methods
     public List<String> getLog() { return new ArrayList<>(log); }
+
+    public void log(String line) {
+        log.add(line);
+    }
     
     public void clearLog() {
         log.clear();
+    }
+    
+    /**
+     * Get access to the sensors map for dynamic scenarios.
+     */
+    protected Map<String, MockSensor> getSensorsMap() {
+        return sensors;
+    }
+    
+    /**
+     * Get access to the motors map for dynamic scenarios.
+     */
+    protected Map<String, MockMotor> getMotorsMap() {
+        return motors;
+    }
+    
+    /**
+     * Convenience method to set sensor values for dynamic scenarios.
+     * Creates sensor if it doesn't exist and sets the appropriate value.
+     * 
+     * @param port Sensor port
+     * @param type Sensor type (TOUCH, LIGHT, ULTRASONIC)
+     * @param value Value to set (Boolean for touch, Double for others)
+     */
+    public void setSensorValue(String port, String type, Object value) {
+        ISensor sensor = getSensor(port, type);
+        if (sensor instanceof MockSensor) {
+            MockSensor mockSensor = (MockSensor) sensor;
+            
+            if ("TOUCH".equals(type) && value instanceof Boolean) {
+                mockSensor.setPressed(((Boolean) value).booleanValue());
+                log.add("[Scenario] TouchSensor(" + port + ").setPressed(" + value + ")");
+            } else if ("LIGHT".equals(type) && value instanceof Double) {
+                mockSensor.setLightValue(((Double) value).doubleValue());
+                log.add("[Scenario] LightSensor(" + port + ").setValue(" + value + ")");
+            } else if ("ULTRASONIC".equals(type) && value instanceof Double) {
+                mockSensor.setDistance(((Double) value).doubleValue());
+                log.add("[Scenario] DistanceSensor(" + port + ").setDistance(" + value + ")");
+            }
+        }
+    }
+    
+    /**
+     * Convenience method to set touch sensor value.
+     */
+    public void setTouchSensorValue(String port, boolean pressed) {
+        setSensorValue(port, "TOUCH", Boolean.valueOf(pressed));
+    }
+    
+    /**
+     * Convenience method to set light sensor value.
+     */
+    public void setLightSensorValue(String port, double value) {
+        setSensorValue(port, "LIGHT", Double.valueOf(value));
+    }
+    
+    /**
+     * Convenience method to set distance sensor value.
+     */
+    public void setDistanceSensorValue(String port, double distance) {
+        setSensorValue(port, "ULTRASONIC", Double.valueOf(distance));
     }
 
     /**
@@ -141,11 +265,12 @@ public class MockHardware implements IHardware {
     /**
      * Mock sensor implementation
      */
-    private class MockSensor implements ISensor {
+    protected class MockSensor implements ISensor {
         private final String port;
         private final String type;
         private boolean pressed = false;
         private double distance = 50.0;
+        private double lightValue = 75.0;
         
         public MockSensor(String port, String type) {
             this.port = port;
@@ -178,7 +303,7 @@ public class MockHardware implements IHardware {
             } else if ("ULTRASONIC".equals(type)) {
                 value = getDistance();
             } else if ("LIGHT".equals(type)) {
-                value = 75.0; // Mock light sensor value
+                value = lightValue;
             } else {
                 value = 0.0;
             }
@@ -189,5 +314,6 @@ public class MockHardware implements IHardware {
         // Test helper methods
         public void setPressed(boolean pressed) { this.pressed = pressed; }
         public void setDistance(double distance) { this.distance = distance; }
+        public void setLightValue(double lightValue) { this.lightValue = lightValue; }
     }
 }

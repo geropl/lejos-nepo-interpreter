@@ -7,138 +7,196 @@ import java.util.*;
  * the robot hardware configuration.
  */
 public class ConfigurationBlockExecutor {
+
+    public static RobotConfiguration parseConfigFromProgram(IXMLElement program) throws ConfigurationException {
+        IXMLElement config = program.findElement("config");
+        if (config == null) {
+            throw new IllegalArgumentException("Cannot find config element!");
+        }
+
+        ConfigurationBlockExecutor executor = new ConfigurationBlockExecutor();
+        return executor.parseConfiguration(config);
+    }
     
     /**
-     * Parse configuration from XML and build RobotConfiguration
+     * Parse configuration from XML config element and build RobotConfiguration.
+     * 
+     * @param configRoot Must be a config element containing block_set/instance/robBrick_EV3-Brick
+     * @return Complete robot configuration
+     * @throws IllegalArgumentException if configRoot is not a config element
+     * @throws ConfigurationException if required structure is missing
      */
-    public RobotConfiguration parseConfiguration(IXMLElement configRoot) {
-        RobotConfiguration config = new RobotConfiguration();
-        
+    public RobotConfiguration parseConfiguration(IXMLElement configRoot) throws ConfigurationException {
         if (configRoot == null) {
-            // Return default configuration if no config section
             return createDefaultConfiguration();
         }
         
-        // Process the root configuration block
-        executeConfigBlock(configRoot, config);
+        // Validate input is config element
+        if (!"config".equals(configRoot.getTagName())) {
+            throw new IllegalArgumentException("Expected config element, got: " + configRoot.getTagName());
+        }
+        
+        // Navigate to main brick block: find block with type="robBrick_EV3-Brick"
+        IXMLElement brickBlock = configRoot.findElementByTypeAttr("robBrick_EV3-Brick");
+        if (brickBlock == null) {
+            throw new ConfigurationException("No robBrick_EV3-Brick block found in config section");
+        }
+        
+        // Parse the main brick block
+        return parseMainBrickBlock(brickBlock);
+    }
+    
+    /**
+     * Parse the main robBrick_EV3-Brick block for wheel/track settings and ports.
+     * 
+     * @param brickBlock The robBrick_EV3-Brick block element
+     * @return Complete robot configuration
+     */
+    private RobotConfiguration parseMainBrickBlock(IXMLElement brickBlock) {
+        RobotConfiguration config = new RobotConfiguration();
+        
+        // Parse wheel diameter
+        String wheelDiameter = getFieldValue(brickBlock, "WHEEL_DIAMETER");
+        if (wheelDiameter != null) {
+            try {
+                config.setWheelDiameter(Double.parseDouble(wheelDiameter));
+            } catch (NumberFormatException e) {
+                // Use default value - already set in RobotConfiguration
+            }
+        }
+        
+        // Parse track width
+        String trackWidth = getFieldValue(brickBlock, "TRACK_WIDTH");
+        if (trackWidth != null) {
+            try {
+                config.setTrackWidth(Double.parseDouble(trackWidth));
+            } catch (NumberFormatException e) {
+                // Use default value - already set in RobotConfiguration
+            }
+        }
+        
+        // Process value elements for motors and sensors
+        Vector<IXMLElement> values = brickBlock.getChildren("value");
+        for (int i = 0; i < values.size(); i++) {
+            IXMLElement value = values.elementAt(i);
+            parsePortConfiguration(value, config);
+        }
         
         return config;
     }
     
     /**
-     * Execute a configuration block
+     * Parse a port configuration (motor or sensor) from a value element.
+     * 
+     * @param valueElement The value element (e.g., name="MA", name="S1")
+     * @param config Configuration to add the port to
      */
-    private void executeConfigBlock(IXMLElement block, RobotConfiguration config) {
+    private void parsePortConfiguration(IXMLElement valueElement, RobotConfiguration config) {
+        IString nameAttr = valueElement.getAttribute("name");
+        if (nameAttr == null) return;
+        
+        String portName = nameAttr.toString();
+        String portId = extractPortId(portName);
+        
+        IXMLElement block = valueElement.getChild("block");
+        if (block == null) return;
+        
         IString blockTypeAttr = block.getAttribute("type");
         if (blockTypeAttr == null) return;
         
         String blockType = blockTypeAttr.toString();
-
-        if ("robBrick_EV3-Brick".equals(blockType)) {
-            executeMainBrickBlock(block, config);
-        } else if ("robBrick_motor_big".equals(blockType)) {
-            executeMotorBlock(block, config);
-        } else if ("robBrick_motor_medium".equals(blockType)) {
-            executeMotorBlock(block, config); // Same as big motor for NXT
-        } else if ("robBrick_touch".equals(blockType)) {
-            executeSensorBlock(block, config, "touch");
-        } else if ("robBrick_ultrasonic".equals(blockType)) {
-            executeSensorBlock(block, config, "ultrasonic");
+        
+        if ("robBrick_motor_big".equals(blockType) || "robBrick_motor_medium".equals(blockType)) {
+            RobotConfiguration.MotorConfig motorConfig = parseMotorBlock(block, portId);
+            config.addMotor(portId, motorConfig);
+        } else if (blockType.startsWith("robBrick_")) {
+            String sensorType = extractSensorType(blockType);
+            RobotConfiguration.SensorConfig sensorConfig = parseSensorBlock(block, portId, sensorType);
+            config.addSensor(portId, sensorConfig);
+        }
+    }
+    
+    /**
+     * Parse motor configuration from a motor block.
+     * 
+     * @param motorBlock The motor block element
+     * @param port The port identifier (A, C, etc.)
+     * @return Motor configuration
+     */
+    private RobotConfiguration.MotorConfig parseMotorBlock(IXMLElement motorBlock, String port) {
+        RobotConfiguration.MotorConfig motorConfig = new RobotConfiguration.MotorConfig(port);
+        
+        // Parse motor regulation
+        String regulation = getFieldValue(motorBlock, "MOTOR_REGULATION");
+        if ("FALSE".equals(regulation)) {
+            motorConfig.regulation = false;
+        }
+        
+        // Parse motor reverse
+        String reverse = getFieldValue(motorBlock, "MOTOR_REVERSE");
+        if ("ON".equals(reverse)) {
+            motorConfig.reverse = true;
+        }
+        
+        // Parse drive direction
+        String driveDirection = getFieldValue(motorBlock, "MOTOR_DRIVE");
+        if (driveDirection != null) {
+            motorConfig.driveDirection = driveDirection;
+        }
+        
+        return motorConfig;
+    }
+    
+    /**
+     * Parse sensor configuration from a sensor block.
+     * 
+     * @param sensorBlock The sensor block element
+     * @param port The port identifier (1, 4, etc.)
+     * @param sensorType The sensor type (touch, light, etc.)
+     * @return Sensor configuration
+     */
+    private RobotConfiguration.SensorConfig parseSensorBlock(IXMLElement sensorBlock, String port, String sensorType) {
+        return new RobotConfiguration.SensorConfig(port, sensorType);
+    }
+    
+    /**
+     * Extract sensor type from robBrick block type.
+     * 
+     * @param blockType The block type (e.g., "robBrick_touch")
+     * @return Sensor type (e.g., "touch")
+     */
+    private String extractSensorType(String blockType) {
+        if ("robBrick_touch".equals(blockType)) {
+            return "touch";
         } else if ("robBrick_light".equals(blockType)) {
-            executeSensorBlock(block, config, "light");
+            return "light";
+        } else if ("robBrick_ultrasonic".equals(blockType)) {
+            return "ultrasonic";
         } else if ("robBrick_sound".equals(blockType)) {
-            executeSensorBlock(block, config, "sound");
+            return "sound";
         } else if ("robBrick_gyro".equals(blockType)) {
-            executeSensorBlock(block, config, "gyro");
+            return "gyro";
         } else if ("robBrick_color".equals(blockType)) {
-            executeSensorBlock(block, config, "color");
+            return "color";
         }
-        
-        // Process child blocks
-        Vector<IXMLElement> children = block.getAllChildren();
-        for (int i = 0; i < children.size(); i++) {
-            IXMLElement child = children.elementAt(i);
-            IString nameAttr = child.getAttribute("name");
-            if ("statement".equals(child.getTagName()) && nameAttr != null && "ST".equals(nameAttr.toString())) {
-                // Process statement children
-                Vector<IXMLElement> statementChildren = child.getAllChildren();
-                for (int j = 0; j < statementChildren.size(); j++) {
-                    IXMLElement statementChild = statementChildren.elementAt(j);
-                    if ("block".equals(statementChild.getTagName())) {
-                        executeConfigBlock(statementChild, config);
-                    }
-                }
-            } else if ("block".equals(child.getTagName())) {
-                executeConfigBlock(child, config);
-            }
-        }
+        return "unknown";
     }
     
     /**
-     * Execute main brick configuration block
+     * Extract port identifier from value element name.
+     * MA → A, MC → C, S1 → 1, S4 → 4
+     * 
+     * @param valueName The value element name attribute
+     * @return Port identifier
      */
-    private void executeMainBrickBlock(IXMLElement block, RobotConfiguration config) {
-        // Parse wheel diameter
-        String wheelDiameter = getFieldValue(block, "WHEEL_DIAMETER");
-        if (wheelDiameter != null) {
-            try {
-                config.setWheelDiameter(Double.parseDouble(wheelDiameter));
-            } catch (NumberFormatException e) {
-                // Use default value
-            }
+    private String extractPortId(String valueName) {
+        if (valueName != null && valueName.length() > 1) {
+            return valueName.substring(1); // Remove prefix (M or S)
         }
-        
-        // Parse track width
-        String trackWidth = getFieldValue(block, "TRACK_WIDTH");
-        if (trackWidth != null) {
-            try {
-                config.setTrackWidth(Double.parseDouble(trackWidth));
-            } catch (NumberFormatException e) {
-                // Use default value
-            }
-        }
+        return valueName;
     }
     
-    /**
-     * Execute motor configuration block
-     */
-    private void executeMotorBlock(IXMLElement block, RobotConfiguration config) {
-        String motorPort = getFieldValue(block, "MOTORPORT");
-        if (motorPort != null) {
-            RobotConfiguration.MotorConfig motorConfig = new RobotConfiguration.MotorConfig(motorPort);
-            
-            // Parse motor regulation
-            String regulation = getFieldValue(block, "MOTOR_REGULATION");
-            if ("FALSE".equals(regulation)) {
-                motorConfig.regulation = false;
-            }
-            
-            // Parse motor reverse
-            String reverse = getFieldValue(block, "MOTOR_REVERSE");
-            if ("ON".equals(reverse)) {
-                motorConfig.reverse = true;
-            }
-            
-            // Parse drive direction
-            String driveDirection = getFieldValue(block, "MOTOR_DRIVE");
-            if (driveDirection != null) {
-                motorConfig.driveDirection = driveDirection;
-            }
-            
-            config.addMotor(motorPort, motorConfig);
-        }
-    }
-    
-    /**
-     * Execute sensor configuration block
-     */
-    private void executeSensorBlock(IXMLElement block, RobotConfiguration config, String sensorType) {
-        String sensorPort = getFieldValue(block, "SENSORPORT");
-        if (sensorPort != null) {
-            RobotConfiguration.SensorConfig sensorConfig = new RobotConfiguration.SensorConfig(sensorPort, sensorType);
-            config.addSensor(sensorPort, sensorConfig);
-        }
-    }
+
     
     /**
      * Get field value from a block

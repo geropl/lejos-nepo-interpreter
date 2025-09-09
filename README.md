@@ -168,6 +168,12 @@ test/
 ./run_tests.sh --clean       # Clean build artifacts first
 ```
 
+**Exit Code Behavior:**
+- `./run_tests.sh` returns **exit code 0** when all tests pass
+- `./run_tests.sh` returns **exit code 1** when any test fails
+- Each individual test class must call `System.exit(0)` on success or `System.exit(1)` on failure
+- This enables proper CI/CD integration and automated testing workflows
+
 ### Test Types
 
 **Unit Tests (`test/unit/`):**

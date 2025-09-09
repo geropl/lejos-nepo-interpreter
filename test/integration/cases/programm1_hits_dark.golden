@@ -1,0 +1,113 @@
+getMotor('A')
+getMotor('C')
+Motor A.setSpeed(216)
+Motor C.setSpeed(216)
+Motor A.forward()
+Motor C.forward()
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 75.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 75.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 75.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 75.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+[Scenario] LightSensor(4).setValue(40.0)
+[Iteration 3] Scenario applied: Iteration 3: light_4=40.0
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 40.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getMotor('A')
+getMotor('C')
+Motor A.setSpeed(216)
+Motor C.setSpeed(216)
+Motor A.rotate(100)
+Motor C.rotate(-100)
+getSensor('4', 'LIGHT')
+[Scenario] LightSensor(4).setValue(80.0)
+[Iteration 4] Scenario applied: Iteration 4: light_4=80.0
+getMotor('A')
+getMotor('C')
+Motor A.setSpeed(216)
+Motor C.setSpeed(216)
+Motor A.forward()
+Motor C.forward()
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+getSensor('4', 'LIGHT')
+Sensor 4 (LIGHT).getValue() -> 80.0
+getSensor('1', 'TOUCH')
+Sensor 1 (TOUCH).isPressed() -> false
+[ITERATION LIMIT] Test stopped after 20 iterations (limit: 20)

@@ -327,7 +327,17 @@ public class ShallowXMLElement implements IXMLElement {
                 char charAfterTag = (nextOpen + openPattern.length() < content.length()) 
                     ? content.charAt(nextOpen + openPattern.length()) : ' ';
                 if (charAfterTag == ' ' || charAfterTag == '>' || charAfterTag == '/') {
-                    depth++;
+                    // Check if this is a self-closing tag by looking for "/>" pattern
+                    boolean isSelfClosing = false;
+                    int tagEnd = content.indexOf('>', nextOpen);
+                    if (tagEnd != -1 && tagEnd > 0 && content.charAt(tagEnd - 1) == '/') {
+                        isSelfClosing = true;
+                    }
+                    
+                    // Only increment depth for non-self-closing tags
+                    if (!isSelfClosing) {
+                        depth++;
+                    }
                     pos = nextOpen + openPattern.length();
                 } else {
                     pos = nextOpen + 1;
@@ -374,6 +384,22 @@ public class ShallowXMLElement implements IXMLElement {
             return openTag.substring(1, endPos).toString();
         }
         return "unknown";
+    }
+    
+    /**
+     * Find element by tag name recursively within this element's tree.
+     * Uses the static utility implementation from IXMLElement interface.
+     */
+    public IXMLElement findElement(String tagName) {
+        return IXMLElement.findElementImpl(this, tagName);
+    }
+    
+    /**
+     * Find element by type attribute value recursively within this element's tree.
+     * Uses the static utility implementation from IXMLElement interface.
+     */
+    public IXMLElement findElementByTypeAttr(String typeValue) {
+        return IXMLElement.findElementByTypeAttrImpl(this, typeValue);
     }
     
     /**
